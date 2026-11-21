@@ -1,0 +1,23 @@
+﻿---
+# File created by FreeCAD 1.1.4 Revision: 45040 (Git)
+General:
+  UUID: "5b353d81-e786-4e7b-9107-235c255596ca"
+  Name: "Bronze_TM23_SAE_660"
+  Description: "Bronze mancais TM-23 / SAE 660 grafitado (buchas padronizadas de catalogo)"
+Models:
+  Linear Elastic:
+    UUID: "7b561d1d-fb9b-44f6-9da9-56a4f74d7536"
+    Density: "8930 kg/m^3"
+    PoissonRatio: "0.34"
+    UltimateTensileStrength: "240 MPa"
+    YieldStrength: "140 MPa"
+    YoungsModulus: "100 GPa"
+AppearanceModels:
+  Basic Rendering:
+    UUID: "f006c7e4-35b7-43d5-bbf9-c5d572309e6e"
+    AmbientColor: "(0.32, 0.24, 0.09, 1.0)"
+    DiffuseColor: "(0.82, 0.62, 0.24, 1.0)"
+    EmissiveColor: "(0.00, 0.00, 0.00, 1.0)"
+    Shininess: "0.82"
+    SpecularColor: "(0.96, 0.84, 0.46, 1.0)"
+    Transparency: "0"

@@ -1,0 +1,23 @@
+﻿---
+# File created by FreeCAD 1.1.4 Revision: 45040 (Git)
+General:
+  UUID: "bb239bba-7c1d-46aa-b09e-c2a38f88599a"
+  Name: "Aco_SAE_1045"
+  Description: "Aco medio carbono SAE 1045 (eixos O2 e 400rpm, L4, came, pistao, pinos e parafusos 8.8)"
+Models:
+  Linear Elastic:
+    UUID: "7b561d1d-fb9b-44f6-9da9-56a4f74d7536"
+    Density: "7850 kg/m^3"
+    PoissonRatio: "0.3"
+    UltimateTensileStrength: "620 MPa"
+    YieldStrength: "450 MPa"
+    YoungsModulus: "210 GPa"
+AppearanceModels:
+  Basic Rendering:
+    UUID: "f006c7e4-35b7-43d5-bbf9-c5d572309e6e"
+    AmbientColor: "(0.25, 0.27, 0.30, 1.0)"
+    DiffuseColor: "(0.72, 0.75, 0.80, 1.0)"
+    EmissiveColor: "(0.00, 0.00, 0.00, 1.0)"
+    Shininess: "0.86"
+    SpecularColor: "(0.92, 0.94, 0.98, 1.0)"
+    Transparency: "0"

@@ -1,0 +1,23 @@
+﻿---
+# File created by FreeCAD 1.1.4 Revision: 45040 (Git)
+General:
+  UUID: "62e495b7-87f4-42cd-af50-3d7a34d37e4c"
+  Name: "Borracha_NBR_70"
+  Description: "Elastomero NBR 70 Shore A (correia em V perfil A e aneis O-ring 10x1,8 mm)"
+Models:
+  Linear Elastic:
+    UUID: "7b561d1d-fb9b-44f6-9da9-56a4f74d7536"
+    Density: "1200 kg/m^3"
+    PoissonRatio: "0.49"
+    UltimateTensileStrength: "18 MPa"
+    YieldStrength: "12 MPa"
+    YoungsModulus: "10 MPa"
+AppearanceModels:
+  Basic Rendering:
+    UUID: "f006c7e4-35b7-43d5-bbf9-c5d572309e6e"
+    AmbientColor: "(0.05, 0.05, 0.06, 1.0)"
+    DiffuseColor: "(0.14, 0.14, 0.16, 1.0)"
+    EmissiveColor: "(0.00, 0.00, 0.00, 1.0)"
+    Shininess: "0.08"
+    SpecularColor: "(0.10, 0.10, 0.10, 1.0)"
+    Transparency: "0"

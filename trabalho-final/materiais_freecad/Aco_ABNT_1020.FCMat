@@ -1,0 +1,23 @@
+﻿---
+# File created by FreeCAD 1.1.4 Revision: 45040 (Git)
+General:
+  UUID: "58095aa3-bbb9-492c-8538-6b50c5b3c929"
+  Name: "Aco_ABNT_1020"
+  Description: "Aco carbono estrutural ABNT 1020 (barras chatas, chapas #18/#11, Metalon, volante)"
+Models:
+  Linear Elastic:
+    UUID: "7b561d1d-fb9b-44f6-9da9-56a4f74d7536"
+    Density: "7850 kg/m^3"
+    PoissonRatio: "0.3"
+    UltimateTensileStrength: "420 MPa"
+    YieldStrength: "250 MPa"
+    YoungsModulus: "205 GPa"
+AppearanceModels:
+  Basic Rendering:
+    UUID: "f006c7e4-35b7-43d5-bbf9-c5d572309e6e"
+    AmbientColor: "(0.22, 0.24, 0.27, 1.0)"
+    DiffuseColor: "(0.62, 0.66, 0.70, 1.0)"
+    EmissiveColor: "(0.00, 0.00, 0.00, 1.0)"
+    Shininess: "0.7"
+    SpecularColor: "(0.82, 0.85, 0.90, 1.0)"
+    Transparency: "0"

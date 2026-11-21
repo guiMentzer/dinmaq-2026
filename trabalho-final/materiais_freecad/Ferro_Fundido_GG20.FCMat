@@ -1,0 +1,23 @@
+﻿---
+# File created by FreeCAD 1.1.4 Revision: 45040 (Git)
+General:
+  UUID: "2139a74b-c894-468b-aa6d-ab76488bbb4a"
+  Name: "Ferro_Fundido_GG20"
+  Description: "Ferro fundido cinzento GG-20 (carcaca motor/redutor comercial, mancais P204/F204, polias)"
+Models:
+  Linear Elastic:
+    UUID: "7b561d1d-fb9b-44f6-9da9-56a4f74d7536"
+    Density: "7200 kg/m^3"
+    PoissonRatio: "0.26"
+    UltimateTensileStrength: "220 MPa"
+    YieldStrength: "180 MPa"
+    YoungsModulus: "105 GPa"
+AppearanceModels:
+  Basic Rendering:
+    UUID: "f006c7e4-35b7-43d5-bbf9-c5d572309e6e"
+    AmbientColor: "(0.14, 0.16, 0.18, 1.0)"
+    DiffuseColor: "(0.36, 0.40, 0.44, 1.0)"
+    EmissiveColor: "(0.00, 0.00, 0.00, 1.0)"
+    Shininess: "0.32"
+    SpecularColor: "(0.42, 0.44, 0.46, 1.0)"
+    Transparency: "0"

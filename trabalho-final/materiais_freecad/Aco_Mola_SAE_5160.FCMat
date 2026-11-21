@@ -1,0 +1,23 @@
+﻿---
+# File created by FreeCAD 1.1.4 Revision: 45040 (Git)
+General:
+  UUID: "df7fe611-f9fc-4559-8f68-85b0155e65ba"
+  Name: "Aco_Mola_SAE_5160"
+  Description: "Aco mola temperado/revenido SAE 5160 (navalha de corte 54-58 HRC e mola de retorno)"
+Models:
+  Linear Elastic:
+    UUID: "7b561d1d-fb9b-44f6-9da9-56a4f74d7536"
+    Density: "7850 kg/m^3"
+    PoissonRatio: "0.3"
+    UltimateTensileStrength: "1400 MPa"
+    YieldStrength: "1100 MPa"
+    YoungsModulus: "210 GPa"
+AppearanceModels:
+  Basic Rendering:
+    UUID: "f006c7e4-35b7-43d5-bbf9-c5d572309e6e"
+    AmbientColor: "(0.26, 0.14, 0.14, 1.0)"
+    DiffuseColor: "(0.78, 0.20, 0.20, 1.0)"
+    EmissiveColor: "(0.00, 0.00, 0.00, 1.0)"
+    Shininess: "0.88"
+    SpecularColor: "(0.94, 0.88, 0.88, 1.0)"
+    Transparency: "0"

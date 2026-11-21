@@ -1,0 +1,1152 @@
+{
+  "cad_file": "/home/guimentzer/Repos/dinmaq-2026/trabalho-final/prensa_baru_manual_v1.FCStd",
+  "densities_kg_m3": {
+    "aco": 7850.0,
+    "bronze": 8930.0,
+    "borracha": 1200.0,
+    "uhmw": 935.0,
+    "pc": 1200.0,
+    "baru": 1100.0
+  },
+  "parts": {
+    "Chapa_Base_Estrutural": {
+      "name": "Chapa_Base_Estrutural",
+      "label": "Chapa de Mesa Estrutural 1/4 pol (340x100 mm - Porticos Soldados s/ Cantoneiras)",
+      "solids": 1,
+      "vol_cm3": 191.51644130945365,
+      "mass_kg": 1.5034040642792115,
+      "cg_local_mm": [
+        -9.028228533163837,
+        4.010622641128978,
+        985.1750000000001
+      ],
+      "Ixx_cg_kg_m2": 0.0013721130708717318,
+      "Iyy_cg_kg_m2": 0.014726456137861626,
+      "Izz_cg_kg_m2": 0.016088465707004142,
+      "Iyy_orig_kg_m2": 1.4740075498233107,
+      "material": "aco",
+      "freecad_material": "Aco_ABNT_1020",
+      "density_kg_m3": 7850.000000000001,
+      "group": "Sub01_Estator"
+    },
+    "Portico_Estrutural_Traseiro": {
+      "name": "Portico_Estrutural_Traseiro",
+      "label": "Portico Traseiro Soldado (Barra Chata 2x1/4 pol - 4 Furos M8 Guia U)",
+      "solids": 1,
+      "vol_cm3": 475.941927320291,
+      "mass_kg": 3.7361441294642845,
+      "cg_local_mm": [
+        -0.04191449253514988,
+        27.174999999999997,
+        1243.0240757875063
+      ],
+      "Ixx_cg_kg_m2": 0.06869843158841449,
+      "Iyy_cg_kg_m2": 0.09330090567763394,
+      "Izz_cg_kg_m2": 0.02462758253449452,
+      "Iyy_orig_kg_m2": 5.866050282713495,
+      "material": "aco",
+      "freecad_material": "Aco_ABNT_1020",
+      "density_kg_m3": 7850.000000000001,
+      "group": "Sub01_Estator"
+    },
+    "Portico_Estrutural_Frontal": {
+      "name": "Portico_Estrutural_Frontal",
+      "label": "Portico Frontal Soldado (Barra Chata 2x1/4 pol - Y[-40.82,-34.47])",
+      "solids": 1,
+      "vol_cm3": 405.06854231956345,
+      "mass_kg": 3.1797880572085737,
+      "cg_local_mm": [
+        0.07215942202710368,
+        -37.644999999999996,
+        1262.0147460499597
+      ],
+      "Ixx_cg_kg_m2": 0.06290419109630731,
+      "Iyy_cg_kg_m2": 0.08655572543000663,
+      "Izz_cg_kg_m2": 0.02367290383435529,
+      "Iyy_orig_kg_m2": 5.150944461890838,
+      "material": "aco",
+      "freecad_material": "Aco_ABNT_1020",
+      "density_kg_m3": 7850.000000000001,
+      "group": "Sub01_Estator"
+    },
+    "Espacadores_Transversais_Portico": {
+      "name": "Espacadores_Transversais_Portico",
+      "label": "4x Espacadores Tubulares c/ Parafusos M10 Cl. 8.8",
+      "solids": 8,
+      "vol_cm3": 98.15165835584739,
+      "mass_kg": 0.770490518093402,
+      "cg_local_mm": [
+        0.0,
+        -4.910880006208951,
+        1292.5
+      ],
+      "Ixx_cg_kg_m2": 0.005261465380689511,
+      "Iyy_cg_kg_m2": 0.011928830235426957,
+      "Izz_cg_kg_m2": 0.00728400299068452,
+      "Iyy_orig_kg_m2": 1.2990765808020976,
+      "material": "aco",
+      "freecad_material": "Aco_SAE_1045",
+      "density_kg_m3": 7850.000000000001,
+      "group": "Sub01_Estator"
+    },
+    "Batentes_Pinos_Soldados_PMS_PMI": {
+      "name": "Batentes_Pinos_Soldados_PMS_PMI",
+      "label": "2x Pinos Batentes Soldados D10 mm c/ Luva de Borracha (PMS 80 e PMI 20)",
+      "solids": 4,
+      "vol_cm3": 2.7272330759427277,
+      "mass_kg": 0.021408779646150414,
+      "cg_local_mm": [
+        47.69084956931094,
+        -29.950774524460023,
+        1308.0223826256524
+      ],
+      "Ixx_cg_kg_m2": 1.8037153184271955e-05,
+      "Iyy_cg_kg_m2": 4.319880514089102e-05,
+      "Izz_cg_kg_m2": 2.544749482051538e-05,
+      "Iyy_orig_kg_m2": 0.03672065523879046,
+      "material": "aco",
+      "freecad_material": "Aco_ABNT_1020",
+      "density_kg_m3": 7850.000000000001,
+      "group": "Sub01_Estator"
+    },
+    "Suporte_Baru_Cantoneira": {
+      "name": "Suporte_Baru_Cantoneira",
+      "label": "Suporte em Cantoneira Comercial 1.1/2x3/16 (V 90 graus, s/ Usinagem) + Pes Dobrados",
+      "solids": 1,
+      "vol_cm3": 27.23303916380076,
+      "mass_kg": 0.213779357435836,
+      "cg_local_mm": [
+        -0.18280121758065607,
+        1.2657364089944349e-14,
+        1003.3012725694817
+      ],
+      "Ixx_cg_kg_m2": 9.564486573566325e-05,
+      "Iyy_cg_kg_m2": 6.100279103228723e-05,
+      "Izz_cg_kg_m2": 0.00012348730954402301,
+      "Iyy_orig_kg_m2": 0.21525418508090158,
+      "material": "aco",
+      "freecad_material": "Aco_ABNT_1020",
+      "density_kg_m3": 7850.000000000001,
+      "group": "Sub01_Estator"
+    },
+    "Guia_Pistao_Chapa_U": {
+      "name": "Guia_Pistao_Chapa_U",
+      "label": "Guia Linear em Chapa Dobrada em U (3.0 mm) Parafusavel c/ 4 Furos M8",
+      "solids": 3,
+      "vol_cm3": 55.87810766708812,
+      "mass_kg": 0.4386431451866418,
+      "cg_local_mm": [
+        1.204453957749853e-15,
+        2.8595419678153213,
+        1154.5000000000005
+      ],
+      "Ixx_cg_kg_m2": 0.0005446788265924213,
+      "Iyy_cg_kg_m2": 0.0006418526072454215,
+      "Izz_cg_kg_m2": 0.0003535603415877131,
+      "Iyy_orig_kg_m2": 0.5852962511929516,
+      "material": "aco",
+      "freecad_material": "Aco_ABNT_1020",
+      "density_kg_m3": 7850.000000000001,
+      "group": "Sub01_Estator"
+    },
+    "Parafusos_Guia_Pistao_M8": {
+      "name": "Parafusos_Guia_Pistao_M8",
+      "label": "4x Parafusos Sextavados M8x20 + Porcas da Guia em U",
+      "solids": 4,
+      "vol_cm3": 7.082452031346294,
+      "mass_kg": 0.05559724844606842,
+      "cg_local_mm": [
+        -9.98451412305159e-16,
+        26.43185105822377,
+        1154.5
+      ],
+      "Ixx_cg_kg_m2": 3.4719254872022166e-05,
+      "Iyy_cg_kg_m2": 9.363202003753398e-05,
+      "Izz_cg_kg_m2": 6.324064332484248e-05,
+      "Iyy_orig_kg_m2": 0.07419755045566089,
+      "material": "aco",
+      "freecad_material": "Aco_SAE_1045",
+      "density_kg_m3": 7850.000000000001,
+      "group": "Sub01_Estator"
+    },
+    "Tiras_Desgaste_UHMW_5mm": {
+      "name": "Tiras_Desgaste_UHMW_5mm",
+      "label": "4x Tiras Planas Retas Substituiveis de UHMW (5.0 / 10.95 mm)",
+      "solids": 4,
+      "vol_cm3": 80.96995199999999,
+      "mass_kg": 0.07570690511999999,
+      "cg_local_mm": [
+        2.8849603223144505e-16,
+        5.446537500726198,
+        1154.4999999999998
+      ],
+      "Ixx_cg_kg_m2": 7.620844473912926e-05,
+      "Iyy_cg_kg_m2": 7.184893071622027e-05,
+      "Izz_cg_kg_m2": 2.6875855993232523e-05,
+      "Iyy_orig_kg_m2": 0.10097933048473685,
+      "material": "uhmw",
+      "freecad_material": "UHMW_PE",
+      "density_kg_m3": 935.0,
+      "group": "Sub01_Estator"
+    },
+    "Buchas_Catalogo_Estator": {
+      "name": "Buchas_Catalogo_Estator",
+      "label": "4x Buchas Padronizadas de Catalogo dos Mancais Fixos O4 (12x14) e O2 (20x23)",
+      "solids": 4,
+      "vol_cm3": 1.7798279745319785,
+      "mass_kg": 0.01589386381257057,
+      "cg_local_mm": [
+        22.56271552235868,
+        -5.235000000000008,
+        1334.2274829120445
+      ],
+      "Ixx_cg_kg_m2": 9.92033877070706e-05,
+      "Iyy_cg_kg_m2": 8.645332439551796e-05,
+      "Izz_cg_kg_m2": 2.0746836653762046e-05,
+      "Iyy_orig_kg_m2": 0.02838821241833621,
+      "material": "bronze",
+      "freecad_material": "Bronze_TM23_SAE_660",
+      "density_kg_m3": 8930.0,
+      "group": "Sub01_Estator"
+    },
+    "Pino_Eixo_O4": {
+      "name": "Pino_Eixo_O4",
+      "label": "Pino Liso Comercial D12 mm c/ Canaletas O-Ring do Pivo O4",
+      "solids": 3,
+      "vol_cm3": 9.48773133064504,
+      "mass_kg": 0.07447869094556357,
+      "cg_local_mm": [
+        6.113428740035286e-17,
+        -5.249999999999999,
+        1447.4999999999998
+      ],
+      "Ixx_cg_kg_m2": 4.3635161176795677e-05,
+      "Iyy_cg_kg_m2": 1.5121151275249603e-06,
+      "Izz_cg_kg_m2": 4.3635161176715676e-05,
+      "Iyy_orig_kg_m2": 0.15605345481063795,
+      "material": "aco",
+      "freecad_material": "Aco_SAE_1045",
+      "density_kg_m3": 7850.000000000001,
+      "group": "Sub01_Estator"
+    },
+    "Aneis_Retencao_ORing_O4": {
+      "name": "Aneis_Retencao_ORing_O4",
+      "label": "2x Aneis de Retencao O-Ring NBR 70 (10x1.8 mm) do Pivo O4",
+      "solids": 2,
+      "vol_cm3": 0.19570241174832168,
+      "mass_kg": 0.00023484289409798605,
+      "cg_local_mm": [
+        -3.193640988995601e-17,
+        -5.249999999999997,
+        1447.5000000000002
+      ],
+      "Ixx_cg_kg_m2": 3.5261271883803586e-07,
+      "Iyy_cg_kg_m2": 8.938566750741006e-09,
+      "Izz_cg_kg_m2": 3.526127188382287e-07,
+      "Iyy_orig_kg_m2": 0.0004920649801936443,
+      "material": "borracha",
+      "freecad_material": "Borracha_NBR_70",
+      "density_kg_m3": 1200.0,
+      "group": "Sub01_Estator"
+    },
+    "Conjunto_Soldado_L2_Alavanca_O2": {
+      "name": "Conjunto_Soldado_L2_Alavanca_O2",
+      "label": "Eixo D20 Liso Soldado ao Braco L2 + Tubo 1.1/4x2.0 (R_ponta=600 mm)",
+      "solids": 3,
+      "vol_cm3": 161.4533117546602,
+      "mass_kg": 1.267408497274083,
+      "cg_local_mm": [
+        92.94033285336073,
+        -46.520955052007906,
+        -102.15099792248587
+      ],
+      "Ixx_cg_kg_m2": 0.019631062307227803,
+      "Iyy_cg_kg_m2": 0.030580718347259374,
+      "Izz_cg_kg_m2": 0.013031091045320999,
+      "Iyy_orig_kg_m2": 0.054753660756951573,
+      "material": "aco",
+      "freecad_material": "Aco_SAE_1045",
+      "density_kg_m3": 7850.000000000001,
+      "group": "Corpo2_O2"
+    },
+    "Buchas_Catalogo_A": {
+      "name": "Buchas_Catalogo_A",
+      "label": "Bucha Padrao de Catalogo 12x14 mm da Junta A",
+      "solids": 1,
+      "vol_cm3": 0.3780059408224787,
+      "mass_kg": 0.003375593051544735,
+      "cg_local_mm": [
+        69.99999999999999,
+        -27.234999999999996,
+        1.1729410023281208e-14
+      ],
+      "Ixx_cg_kg_m2": 9.694874836683372e-08,
+      "Iyy_cg_kg_m2": 1.4386845097543903e-07,
+      "Izz_cg_kg_m2": 9.694874836682332e-08,
+      "Iyy_orig_kg_m2": 1.6684274403544637e-05,
+      "material": "bronze",
+      "freecad_material": "Bronze_TM23_SAE_660",
+      "density_kg_m3": 8930.0,
+      "group": "Corpo2_O2"
+    },
+    "Manopla_Empunhadura_Borracha": {
+      "name": "Manopla_Empunhadura_Borracha",
+      "label": "Manopla Ergonomica de Borracha (D32 x 120 mm, Centro R=540 mm)",
+      "solids": 1,
+      "vol_cm3": 96.42930154634647,
+      "mass_kg": 0.11571516185561578,
+      "cg_local_mm": [
+        347.13744861121563,
+        -65.49999999999999,
+        -413.702301506404
+      ],
+      "Ixx_cg_kg_m2": 9.181523727698823e-05,
+      "Iyy_cg_kg_m2": 0.00014603263069107056,
+      "Izz_cg_kg_m2": 6.902893413160859e-05,
+      "Iyy_orig_kg_m2": 0.033894822735816746,
+      "material": "borracha",
+      "freecad_material": "Borracha_NBR_70",
+      "density_kg_m3": 1200.0,
+      "group": "Corpo2_O2"
+    },
+    "Pino_Eixo_A": {
+      "name": "Pino_Eixo_A",
+      "label": "Pino Liso Comercial D12 mm c/ Canaletas O-Ring e Arruelas da Junta A",
+      "solids": 4,
+      "vol_cm3": 2.830165034459036,
+      "mass_kg": 0.022216795520503436,
+      "cg_local_mm": [
+        69.99999999999996,
+        -22.208285701111137,
+        1.10868330394604e-14
+      ],
+      "Ixx_cg_kg_m2": 1.2081360578274847e-06,
+      "Iyy_cg_kg_m2": 5.089670703600353e-07,
+      "Izz_cg_kg_m2": 1.2081360578275276e-06,
+      "Iyy_orig_kg_m2": 0.00010937126512082678,
+      "material": "aco",
+      "freecad_material": "Aco_SAE_1045",
+      "density_kg_m3": 7850.000000000001,
+      "group": "Corpo2_O2"
+    },
+    "Aneis_Retencao_ORing_A": {
+      "name": "Aneis_Retencao_ORing_A",
+      "label": "2x Aneis de Retencao O-Ring NBR 70 (10x1.8 mm) da Junta A",
+      "solids": 2,
+      "vol_cm3": 0.1957024117483205,
+      "mass_kg": 0.00023484289409798464,
+      "cg_local_mm": [
+        70.0,
+        -23.175,
+        1.1546319456101628e-14
+      ],
+      "Ixx_cg_kg_m2": 2.8354713803713617e-08,
+      "Iyy_cg_kg_m2": 8.938566750868131e-09,
+      "Izz_cg_kg_m2": 2.8354713803713567e-08,
+      "Iyy_orig_kg_m2": 1.159668747830993e-06,
+      "material": "borracha",
+      "freecad_material": "Borracha_NBR_70",
+      "density_kg_m3": 1200.0,
+      "group": "Corpo2_O2"
+    },
+    "Elo3_Biela_L3": {
+      "name": "Elo3_Biela_L3",
+      "label": "Biela L3 = 100.00 mm (Barra Chata 1x1/4 pol)",
+      "solids": 1,
+      "vol_cm3": 17.38039192117336,
+      "mass_kg": 0.13643607658121087,
+      "cg_local_mm": [
+        49.99999999999995,
+        -18.825000000000003,
+        -4.55563352796553e-13
+      ],
+      "Ixx_cg_kg_m2": 8.093884794728658e-06,
+      "Iyy_cg_kg_m2": 0.00015214708853232667,
+      "Izz_cg_kg_m2": 0.0001449701110205892,
+      "Iyy_orig_kg_m2": 0.0004932372799853533,
+      "material": "aco",
+      "freecad_material": "Aco_ABNT_1020",
+      "density_kg_m3": 7850.000000000001,
+      "group": "Corpo3_L3"
+    },
+    "Buchas_Catalogo_L3": {
+      "name": "Buchas_Catalogo_L3",
+      "label": "2x Buchas Padrao de Catalogo 12x14 mm da Biela L3",
+      "solids": 2,
+      "vol_cm3": 0.5010683202843045,
+      "mass_kg": 0.004474540100138839,
+      "cg_local_mm": [
+        49.999999999999964,
+        -18.825000000000024,
+        -4.538397953047653e-13
+      ],
+      "Ixx_cg_kg_m2": 1.0991845720977426e-07,
+      "Iyy_cg_kg_m2": 1.1377056044323038e-05,
+      "Izz_cg_kg_m2": 1.1296268707556875e-05,
+      "Iyy_orig_kg_m2": 2.2563406294670122e-05,
+      "material": "bronze",
+      "freecad_material": "Bronze_TM23_SAE_660",
+      "density_kg_m3": 8930.0,
+      "group": "Corpo3_L3"
+    },
+    "Elo4_Balancim_L4": {
+      "name": "Elo4_Balancim_L4",
+      "label": "Balancim L4 = 111.96 mm (Barra Chata 1.1/2x1/2 pol)",
+      "solids": 1,
+      "vol_cm3": 64.72158780077005,
+      "mass_kg": 0.5080644642360449,
+      "cg_local_mm": [
+        55.98076211353318,
+        2.2637185782443076e-16,
+        -1.600190491160637e-13
+      ],
+      "Ixx_cg_kg_m2": 6.820463686067109e-05,
+      "Iyy_cg_kg_m2": 0.0008778994629271343,
+      "Izz_cg_kg_m2": 0.0008233524456392347,
+      "Iyy_orig_kg_m2": 0.0024700951131182876,
+      "material": "aco",
+      "freecad_material": "Aco_SAE_1045",
+      "density_kg_m3": 7850.000000000001,
+      "group": "Corpo4_L4"
+    },
+    "Buchas_Catalogo_L4": {
+      "name": "Buchas_Catalogo_L4",
+      "label": "2x Buchas Padrao de Catalogo 12x14 mm do Balancim L4",
+      "solids": 2,
+      "vol_cm3": 1.0101537336931572,
+      "mass_kg": 0.009020672841879896,
+      "cg_local_mm": [
+        55.980762113533174,
+        -3.5087728141726116e-17,
+        -1.5961347937200936e-13
+      ],
+      "Ixx_cg_kg_m2": 3.115749420258151e-07,
+      "Iyy_cg_kg_m2": 2.8653859919149808e-05,
+      "Izz_cg_kg_m2": 2.8580971980520095e-05,
+      "Iyy_orig_kg_m2": 5.69232569576441e-05,
+      "material": "bronze",
+      "freecad_material": "Bronze_TM23_SAE_660",
+      "density_kg_m3": 8930.0,
+      "group": "Corpo4_L4"
+    },
+    "Elo5_Garfo_Duplo_L5": {
+      "name": "Elo5_Garfo_Duplo_L5",
+      "label": "Garfo Duplo L5 = 111.96 mm (2x Barra Chata 1.1/4x1/4 pol)",
+      "solids": 2,
+      "vol_cm3": 51.268261002608256,
+      "mass_kg": 0.4024558488704749,
+      "cg_local_mm": [
+        55.98076211353317,
+        2.2068965383230737e-15,
+        -1.707675279740867e-13
+      ],
+      "Ixx_cg_kg_m2": 8.029822808703842e-05,
+      "Iyy_cg_kg_m2": 0.0006193226623708818,
+      "Izz_cg_kg_m2": 0.0006308937016652549,
+      "Iyy_orig_kg_m2": 0.0018805572045841115,
+      "material": "aco",
+      "freecad_material": "Aco_ABNT_1020",
+      "density_kg_m3": 7850.000000000001,
+      "group": "Corpo5_L5"
+    },
+    "Buchas_Catalogo_L5": {
+      "name": "Buchas_Catalogo_L5",
+      "label": "4x Buchas Padrao de Catalogo 12x14 mm do Garfo L5",
+      "solids": 4,
+      "vol_cm3": 1.002136640568608,
+      "mass_kg": 0.008949080200277671,
+      "cg_local_mm": [
+        55.98076211353322,
+        -1.1630626414028443e-15,
+        -1.722319232981093e-13
+      ],
+      "Ixx_cg_kg_m2": 1.2111768667804325e-06,
+      "Iyy_cg_kg_m2": 2.8426448332489838e-05,
+      "Izz_cg_kg_m2": 2.9256213611318418e-05,
+      "Iyy_orig_kg_m2": 5.6471485077027864e-05,
+      "material": "bronze",
+      "freecad_material": "Bronze_TM23_SAE_660",
+      "density_kg_m3": 8930.0,
+      "group": "Corpo5_L5"
+    },
+    "Pino_Eixo_B": {
+      "name": "Pino_Eixo_B",
+      "label": "Pino Liso Comercial D12 mm c/ Canaletas O-Ring e Arruelas DIN 125 da Junta B",
+      "solids": 6,
+      "vol_cm3": 5.915242101254857,
+      "mass_kg": 0.04643465049485064,
+      "cg_local_mm": [
+        1.2984372511598755e-16,
+        -3.4766368743279035,
+        -1.7035488043104224e-13
+      ],
+      "Ixx_cg_kg_m2": 8.208204908370613e-06,
+      "Iyy_cg_kg_m2": 1.2035099058215216e-06,
+      "Izz_cg_kg_m2": 8.208204908370626e-06,
+      "Iyy_orig_kg_m2": 1.2035099058215216e-06,
+      "material": "aco",
+      "freecad_material": "Aco_SAE_1045",
+      "density_kg_m3": 7850.000000000001,
+      "group": "Corpo5_L5"
+    },
+    "Aneis_Retencao_ORing_B": {
+      "name": "Aneis_Retencao_ORing_B",
+      "label": "2x Aneis de Retencao O-Ring NBR 70 (10x1.8 mm) da Junta B",
+      "solids": 2,
+      "vol_cm3": 0.1957024117483208,
+      "mass_kg": 0.00023484289409798497,
+      "cg_local_mm": [
+        1.3017774813672468e-16,
+        -3.700000000000006,
+        -1.6697754290362354e-13
+      ],
+      "Ixx_cg_kg_m2": 1.0177056547258168e-07,
+      "Iyy_cg_kg_m2": 8.938566750868098e-09,
+      "Izz_cg_kg_m2": 1.0177056547258167e-07,
+      "Iyy_orig_kg_m2": 8.938566750868098e-09,
+      "material": "borracha",
+      "freecad_material": "Borracha_NBR_70",
+      "density_kg_m3": 1200.0,
+      "group": "Corpo5_L5"
+    },
+    "Pistao_Embolo_Quadrado": {
+      "name": "Pistao_Embolo_Quadrado",
+      "label": "Embolo Barra Quadrada 1x1 pol + Chapa Encosto e Orelha O5 Soldadas (Zero Fresa)",
+      "solids": 1,
+      "vol_cm3": 106.3825086260685,
+      "mass_kg": 0.8351026927146378,
+      "cg_local_mm": [
+        7.822598497346452e-16,
+        0.34080806587465967,
+        -91.89205233860393
+      ],
+      "Ixx_cg_kg_m2": 0.002003586191390449,
+      "Iyy_cg_kg_m2": 0.002025419681153236,
+      "Izz_cg_kg_m2": 0.00010472955218416625,
+      "Iyy_orig_kg_m2": 0.00907715148507152,
+      "material": "aco",
+      "freecad_material": "Aco_SAE_1045",
+      "density_kg_m3": 7850.000000000001,
+      "group": "Corpo6_O5"
+    },
+    "Navalha_Corte_SAE5160": {
+      "name": "Navalha_Corte_SAE5160",
+      "label": "Navalha Reta Cunha 30 graus (SAE 5160 50x26x6.35 mm, s/ Entalhes Fresados)",
+      "solids": 1,
+      "vol_cm3": 6.26260848603807,
+      "mass_kg": 0.04916147661539886,
+      "cg_local_mm": [
+        -4.647237731947975e-15,
+        4.661954266535405e-17,
+        -170.91177810733413
+      ],
+      "Ixx_cg_kg_m2": 2.333709897078208e-06,
+      "Iyy_cg_kg_m2": 1.2375489040861566e-05,
+      "Izz_cg_kg_m2": 1.0323159925163604e-05,
+      "Iyy_orig_kg_m2": 0.001448423314849009,
+      "material": "aco",
+      "freecad_material": "Aco_Mola_SAE_5160",
+      "density_kg_m3": 7850.000000000001,
+      "group": "Corpo6_O5"
+    },
+    "Parafusos_Fixacao_Navalha_M6": {
+      "name": "Parafusos_Fixacao_Navalha_M6",
+      "label": "2x Parafusos Sextavados Comuns M6x20 c/ Porcas da Navalha",
+      "solids": 2,
+      "vol_cm3": 1.8807277938403073,
+      "mass_kg": 0.014763713181646413,
+      "cg_local_mm": [
+        0.0,
+        3.64991137413624,
+        -169.57695154586733
+      ],
+      "Ixx_cg_kg_m2": 7.92536266033178e-07,
+      "Iyy_cg_kg_m2": 3.4614362292711183e-06,
+      "Izz_cg_kg_m2": 4.114371731903447e-06,
+      "Iyy_orig_kg_m2": 0.0004280118289873438,
+      "material": "aco",
+      "freecad_material": "Aco_SAE_1045",
+      "density_kg_m3": 7850.000000000001,
+      "group": "Corpo6_O5"
+    },
+    "Bucha_Catalogo_O5": {
+      "name": "Bucha_Catalogo_O5",
+      "label": "Bucha Padrao de Catalogo 12x14 mm do Olhal O5",
+      "solids": 1,
+      "vol_cm3": 0.505076866846579,
+      "mass_kg": 0.0045103364209399515,
+      "cg_local_mm": [
+        1.7304162227741932e-16,
+        6.958334135317366e-16,
+        -1.8007055192436564e-15
+      ],
+      "Ixx_cg_kg_m2": 1.5578747101290725e-07,
+      "Iyy_cg_kg_m2": 1.922314403277456e-07,
+      "Izz_cg_kg_m2": 1.557874710129094e-07,
+      "Iyy_orig_kg_m2": 1.922314403277456e-07,
+      "material": "bronze",
+      "freecad_material": "Bronze_TM23_SAE_660",
+      "density_kg_m3": 8930.0,
+      "group": "Corpo6_O5"
+    },
+    "Pino_Eixo_O5": {
+      "name": "Pino_Eixo_O5",
+      "label": "Pino Liso Comercial D12 mm c/ Canaletas O-Ring e Arruelas DIN 125 de O5",
+      "solids": 5,
+      "vol_cm3": 4.965910638060774,
+      "mass_kg": 0.038982398508777084,
+      "cg_local_mm": [
+        1.4162002749818636e-17,
+        -1.9580076101729326e-15,
+        3.2337001203970796e-16
+      ],
+      "Ixx_cg_kg_m2": 5.141419480926437e-06,
+      "Iyy_cg_kg_m2": 1.0160293225665168e-06,
+      "Izz_cg_kg_m2": 5.141419480926445e-06,
+      "Iyy_orig_kg_m2": 1.0160293225665168e-06,
+      "material": "aco",
+      "freecad_material": "Aco_SAE_1045",
+      "density_kg_m3": 7850.000000000001,
+      "group": "Corpo6_O5"
+    },
+    "Aneis_Retencao_ORing_O5": {
+      "name": "Aneis_Retencao_ORing_O5",
+      "label": "2x Aneis de Retencao O-Ring NBR 70 (10x1.8 mm) de O5",
+      "solids": 2,
+      "vol_cm3": 0.1957024117483207,
+      "mass_kg": 0.00023484289409798488,
+      "cg_local_mm": [
+        -1.971081763429948e-16,
+        0.0,
+        -1.7763568394002505e-15
+      ],
+      "Ixx_cg_kg_m2": 6.962057327056748e-08,
+      "Iyy_cg_kg_m2": 8.938566750868088e-09,
+      "Izz_cg_kg_m2": 6.962057327056748e-08,
+      "Iyy_orig_kg_m2": 8.938566750868088e-09,
+      "material": "borracha",
+      "freecad_material": "Borracha_NBR_70",
+      "density_kg_m3": 1200.0,
+      "group": "Corpo6_O5"
+    },
+    "Quadro_Tubular_Metalon_20x20": {
+      "name": "Quadro_Tubular_Metalon_20x20",
+      "label": "Cavalete de Piso 1,50 m + Gabinete NR-12 (Metalon 20x20x1.50 mm - Z[4.76,1497.5])",
+      "solids": 3,
+      "vol_cm3": 1422.7674534338607,
+      "mass_kg": 11.16872450945581,
+      "cg_local_mm": [
+        -1.5455890649146091,
+        2.31164553570113,
+        741.3636046725073
+      ],
+      "Ixx_cg_kg_m2": 2.392222274889255,
+      "Iyy_cg_kg_m2": 2.5406010221125253,
+      "Izz_cg_kg_m2": 0.33933236900676234,
+      "Iyy_orig_kg_m2": 8.679182004064549,
+      "material": "aco",
+      "freecad_material": "Aco_ABNT_1020",
+      "density_kg_m3": 7850.000000000001,
+      "group": "Sub07_Cavalete_Gabinete"
+    },
+    "Sapatas_Ancoragem_Piso": {
+      "name": "Sapatas_Ancoragem_Piso",
+      "label": "4x Sapatas de Piso 70x70x4.76 mm c/ 8 Furos Ø10.5 mm p/ Chumbadores (Z[0,4.76])",
+      "solids": 4,
+      "vol_cm3": 89.99864718264521,
+      "mass_kg": 0.7064893803837651,
+      "cg_local_mm": [
+        0.0,
+        0.0,
+        2.3799999999999994
+      ],
+      "Ixx_cg_kg_m2": 0.011326576747233362,
+      "Iyy_cg_kg_m2": 0.023177936103171017,
+      "Izz_cg_kg_m2": 0.03450184495810689,
+      "Iyy_orig_kg_m2": 0.023181937941617263,
+      "material": "aco",
+      "freecad_material": "Aco_ABNT_1020",
+      "density_kg_m3": 7850.000000000001,
+      "group": "Sub07_Cavalete_Gabinete"
+    },
+    "Carenagem_Chapa_Galvanizada": {
+      "name": "Carenagem_Chapa_Galvanizada",
+      "label": "Fechamento Superior NR-12 (Chapa Galvanizada #18 - 1.20 mm)",
+      "solids": 6,
+      "vol_cm3": 461.30088868879363,
+      "mass_kg": 3.6212119762070305,
+      "cg_local_mm": [
+        3.192814735281476,
+        15.44281147810048,
+        1297.1513613559152
+      ],
+      "Ixx_cg_kg_m2": 0.08850857400816431,
+      "Iyy_cg_kg_m2": 0.13403377791662086,
+      "Izz_cg_kg_m2": 0.058876231126297876,
+      "Iyy_orig_kg_m2": 6.227127954409514,
+      "material": "aco",
+      "freecad_material": "Aco_ABNT_1020",
+      "density_kg_m3": 7850.000000000001,
+      "group": "Sub07_Cavalete_Gabinete"
+    },
+    "Visor_Policarbonato_NR12": {
+      "name": "Visor_Policarbonato_NR12",
+      "label": "Visor Frontal Transparente NR-12 (Policarbonato 2.0 mm)",
+      "solids": 1,
+      "vol_cm3": 99.76998240724812,
+      "mass_kg": 0.11972397888869775,
+      "cg_local_mm": [
+        5.4695491358943353e-17,
+        -47.12000000000002,
+        1130.9216782823792
+      ],
+      "Ixx_cg_kg_m2": 0.0005984893569976319,
+      "Iyy_cg_kg_m2": 0.0017477837984479067,
+      "Izz_cg_kg_m2": 0.0011493231752052278,
+      "Iyy_orig_kg_m2": 0.15487281834601252,
+      "material": "pc",
+      "freecad_material": "Policarbonato_NR12",
+      "density_kg_m3": 1200.0,
+      "group": "Sub07_Cavalete_Gabinete"
+    },
+    "Calha_Alimentacao_Segura_NR12": {
+      "name": "Calha_Alimentacao_Segura_NR12",
+      "label": "Calha Alimentacao Segura Y=0 (Vao Livre 42x48 mm)",
+      "solids": 1,
+      "vol_cm3": 60.47598337789906,
+      "mass_kg": 0.47473646951650766,
+      "cg_local_mm": [
+        -125.29980281679573,
+        1.3710038257030146,
+        1056.4276768650532
+      ],
+      "Ixx_cg_kg_m2": 0.0004965898380697377,
+      "Iyy_cg_kg_m2": 0.0016389567720281975,
+      "Izz_cg_kg_m2": 0.0015345270592619323,
+      "Iyy_orig_kg_m2": 0.5389169605108586,
+      "material": "aco",
+      "freecad_material": "Aco_ABNT_1020",
+      "density_kg_m3": 7850.000000000001,
+      "group": "Sub07_Cavalete_Gabinete"
+    },
+    "Reservatorio_Alimentacao_Chapa": {
+      "name": "Reservatorio_Alimentacao_Chapa",
+      "label": "Reservatorio/Moega Dedicada da Calha de Alimentacao (Chapa Dobrada #18, 4x M6 no Gabinete)",
+      "solids": 1,
+      "vol_cm3": 156.20000186901981,
+      "mass_kg": 1.2261700146718058,
+      "cg_local_mm": [
+        -277.75753701847464,
+        2.441464170246248,
+        1180.723796342097
+      ],
+      "Ixx_cg_kg_m2": 0.006199883047216249,
+      "Iyy_cg_kg_m2": 0.008651438804488749,
+      "Izz_cg_kg_m2": 0.006794680434621589,
+      "Iyy_orig_kg_m2": 1.8126637996300161,
+      "material": "aco",
+      "freecad_material": "Aco_ABNT_1020",
+      "density_kg_m3": 7850.000000000001,
+      "group": "Sub07_Cavalete_Gabinete"
+    },
+    "Parafusos_Fixacao_Gabinete_M6": {
+      "name": "Parafusos_Fixacao_Gabinete_M6",
+      "label": "Parafusos M6/M8 do Visor, Carenagem, Calha e Moega de Alimentacao",
+      "solids": 20,
+      "vol_cm3": 11.131457908769299,
+      "mass_kg": 0.087381944583839,
+      "cg_local_mm": [
+        -92.59689672902569,
+        -8.153085154289458,
+        1182.8949804249096
+      ],
+      "Ixx_cg_kg_m2": 0.0014743436715479814,
+      "Iyy_cg_kg_m2": 0.002560073067916213,
+      "Izz_cg_kg_m2": 0.0013590280317612522,
+      "Iyy_orig_kg_m2": 0.12557766091511988,
+      "material": "aco",
+      "freecad_material": "Aco_SAE_1045",
+      "density_kg_m3": 7850.000000000001,
+      "group": "Sub07_Cavalete_Gabinete"
+    },
+    "Calha_Descarga_Chapa": {
+      "name": "Calha_Descarga_Chapa",
+      "label": "Calha Inclinada de Descarga Sob a Mesa (Chapa Dobrada #18)",
+      "solids": 1,
+      "vol_cm3": 52.407900000000005,
+      "mass_kg": 0.41140201500000007,
+      "cg_local_mm": [
+        47.362358537548694,
+        4.1593616439688045e-16,
+        871.5562157613645
+      ],
+      "Ixx_cg_kg_m2": 0.001855782308630455,
+      "Iyy_cg_kg_m2": 0.002055492935355418,
+      "Izz_cg_kg_m2": 0.0005006996813870657,
+      "Iyy_orig_kg_m2": 0.3154835292701401,
+      "material": "aco",
+      "freecad_material": "Aco_ABNT_1020",
+      "density_kg_m3": 7850.000000000001,
+      "group": "Sub07_Cavalete_Gabinete"
+    },
+    "Reservatorio_Chapa_Coleta": {
+      "name": "Reservatorio_Chapa_Coleta",
+      "label": "Grande Reservatorio Removivel em Chapa Dobrada #18 (268x230x200 mm = 12,3 L)",
+      "solids": 1,
+      "vol_cm3": 327.0126720000012,
+      "mass_kg": 2.5670494752000095,
+      "cg_local_mm": [
+        -27.9999999999998,
+        -4.2054884038259654,
+        621.8825171986002
+      ],
+      "Ixx_cg_kg_m2": 0.03257513948707351,
+      "Iyy_cg_kg_m2": 0.03743800531164161,
+      "Izz_cg_kg_m2": 0.04659842929825915,
+      "Iyy_orig_kg_m2": 1.0322258059948153,
+      "material": "aco",
+      "freecad_material": "Aco_ABNT_1020",
+      "density_kg_m3": 7850.000000000001,
+      "group": "Sub07_Cavalete_Gabinete"
+    },
+    "Suporte_Eixo_Ejetor_NR12": {
+      "name": "Suporte_Eixo_Ejetor_NR12",
+      "label": "Mancais e Eixo D8 mm da Alavanca Ejetora (O_ext = [34,0,996])",
+      "solids": 1,
+      "vol_cm3": 3.792801570126465,
+      "mass_kg": 0.029773492325492753,
+      "cg_local_mm": [
+        34.00000000000001,
+        0.06906941910910253,
+        995.9506433446256
+      ],
+      "Ixx_cg_kg_m2": 1.1380781012326387e-05,
+      "Iyy_cg_kg_m2": 4.918016340209723e-07,
+      "Izz_cg_kg_m2": 1.1304360505312863e-05,
+      "Iyy_orig_kg_m2": 0.029567763510218906,
+      "material": "aco",
+      "freecad_material": "Aco_ABNT_1020",
+      "density_kg_m3": 7850.000000000001,
+      "group": "Sub07_Cavalete_Gabinete"
+    },
+    "Alavanca_Ejetora_Pedal": {
+      "name": "Alavanca_Ejetora_Pedal",
+      "label": "Alavanca Basculante Ejetora no Rasgo da Cantoneira (0°->22°)",
+      "solids": 1,
+      "vol_cm3": 9.127889587649264,
+      "mass_kg": 0.07165393326304674,
+      "cg_local_mm": [
+        20.406838797861443,
+        13.276198476286662,
+        22.44818917770425
+      ],
+      "Ixx_cg_kg_m2": 4.279765425934153e-05,
+      "Iyy_cg_kg_m2": 0.00014730101922100247,
+      "Izz_cg_kg_m2": 0.00011759393027700781,
+      "Iyy_orig_kg_m2": 0.0002132484523763056,
+      "material": "aco",
+      "freecad_material": "Aco_ABNT_1020",
+      "density_kg_m3": 7850.000000000001,
+      "group": "Pedal_Alavanca_Ejetora"
+    },
+    "Tirante_Pedal_Extracao": {
+      "name": "Tirante_Pedal_Extracao",
+      "label": "Tirante 4-Barras D8 mm c/ Furos Redondos Simples (Sem Rasgos Oblongos!)",
+      "solids": 1,
+      "vol_cm3": 44.84001935450737,
+      "mass_kg": 0.3519941519328829,
+      "cg_local_mm": [
+        -6.451356397902579e-14,
+        -4.887409964417069,
+        -433.17490199072256
+      ],
+      "Ixx_cg_kg_m2": 0.022768141197634054,
+      "Iyy_cg_kg_m2": 0.022767717860949496,
+      "Izz_cg_kg_m2": 4.006566690286213e-06,
+      "Iyy_orig_kg_m2": 0.08881607501830126,
+      "material": "aco",
+      "freecad_material": "Aco_ABNT_1020",
+      "density_kg_m3": 7850.000000000001,
+      "group": "Pedal_Tirante"
+    },
+    "Pedal_Extracao": {
+      "name": "Pedal_Extracao",
+      "label": "Pedal de Extracao de Piso Alinhado em +X (Mesma Direcao da Alavanca!)",
+      "solids": 1,
+      "vol_cm3": 95.00045779295235,
+      "mass_kg": 0.7457535936746761,
+      "cg_local_mm": [
+        342.2599040422235,
+        0.08084171569718124,
+        3.1066338751487277
+      ],
+      "Ixx_cg_kg_m2": 0.0001845576240430121,
+      "Iyy_cg_kg_m2": 0.027759953425681657,
+      "Izz_cg_kg_m2": 0.027842524546567264,
+      "Iyy_orig_kg_m2": 0.11512610040117698,
+      "material": "aco",
+      "freecad_material": "Aco_ABNT_1020",
+      "density_kg_m3": 7850.000000000001,
+      "group": "Pedal_Piso"
+    },
+    "Mola_Retorno_Pedal": {
+      "name": "Mola_Retorno_Pedal",
+      "label": "Mola Comercial de Retorno do Pedal de Extracao",
+      "solids": 20,
+      "vol_cm3": 4.733406960281035,
+      "mass_kg": 0.037157244638206105,
+      "cg_local_mm": [
+        161.0,
+        14.000000000000005,
+        362.4413900555111
+      ],
+      "Ixx_cg_kg_m2": 0.00015876085867351988,
+      "Iyy_cg_kg_m2": 0.00015876085867352004,
+      "Izz_cg_kg_m2": 1.3388327043023154e-06,
+      "Iyy_orig_kg_m2": 0.006003029209386468,
+      "material": "aco",
+      "freecad_material": "Aco_Mola_SAE_5160",
+      "density_kg_m3": 7850.000000000001,
+      "group": "Sub07_Cavalete_Gabinete"
+    },
+    "Baru_Simulado_30x50x40": {
+      "name": "Baru_Simulado_30x50x40",
+      "label": "Baru Simulado 30(Y)x50(X)x40(Z) mm na Cantoneira V 90 graus (Corte PMI = 4.75 mm)",
+      "solids": 1,
+      "vol_cm3": 31.402186888449414,
+      "mass_kg": 0.034542405577294356,
+      "cg_local_mm": [
+        -0.0055547020094812005,
+        -5.319488248643047e-15,
+        1022.25
+      ],
+      "Ixx_cg_kg_m2": 4.304034147140503e-06,
+      "Iyy_cg_kg_m2": 7.103541260575104e-06,
+      "Izz_cg_kg_m2": 5.89513745988159e-06,
+      "Iyy_orig_kg_m2": 0.03610374681747144,
+      "material": "baru",
+      "freecad_material": "Endocarpo_Baru_Simulado",
+      "density_kg_m3": 1100.0,
+      "group": "Sub08_Corpo_Prova"
+    }
+  },
+  "groups": {
+    "Sub01_Estator": {
+      "parts": [
+        "Chapa_Base_Estrutural",
+        "Portico_Estrutural_Traseiro",
+        "Portico_Estrutural_Frontal",
+        "Espacadores_Transversais_Portico",
+        "Batentes_Pinos_Soldados_PMS_PMI",
+        "Suporte_Baru_Cantoneira",
+        "Guia_Pistao_Chapa_U",
+        "Parafusos_Guia_Pistao_M8",
+        "Tiras_Desgaste_UHMW_5mm",
+        "Buchas_Catalogo_Estator",
+        "Pino_Eixo_O4",
+        "Aneis_Retencao_ORing_O4"
+      ],
+      "vol_cm3": 1356.0326149602588,
+      "mass_kg": 10.0855696025324,
+      "cg_local_mm": [
+        -1.2056522710731512,
+        -1.3790066536709071,
+        1206.0675187381003
+      ],
+      "Ixx_cg_kg_m2": 0.2558156887883494,
+      "Iyy_cg_kg_m2": 0.3169878757101087,
+      "Izz_cg_kg_m2": 0.07985024940275745,
+      "Iyy_orig_kg_m2": 14.98746057989195
+    },
+    "Corpo2_O2": {
+      "parts": [
+        "Conjunto_Soldado_L2_Alavanca_O2",
+        "Buchas_Catalogo_A",
+        "Manopla_Empunhadura_Borracha",
+        "Pino_Eixo_A",
+        "Aneis_Retencao_ORing_A"
+      ],
+      "vol_cm3": 261.2864866880365,
+      "mass_kg": 1.4089508905958448,
+      "cg_local_mm": [
+        113.39667047237305,
+        -47.64621037322715,
+        -125.86575780213576
+      ],
+      "Ixx_cg_kg_m2": 0.030487548411055623,
+      "Iyy_cg_kg_m2": 0.04833740783913957,
+      "Izz_cg_kg_m2": 0.020056937258038077,
+      "Iyy_orig_kg_m2": 0.08877569870104052
+    },
+    "Corpo3_L3": {
+      "parts": [
+        "Elo3_Biela_L3",
+        "Buchas_Catalogo_L3"
+      ],
+      "vol_cm3": 17.881460241457663,
+      "mass_kg": 0.14091061668134972,
+      "cg_local_mm": [
+        49.99999999999995,
+        -18.825000000000003,
+        -4.555086221645146e-13
+      ],
+      "Ixx_cg_kg_m2": 8.203803251938431e-06,
+      "Iyy_cg_kg_m2": 0.0001635241445766497,
+      "Izz_cg_kg_m2": 0.00015626637972814607,
+      "Iyy_orig_kg_m2": 0.0005158006862800233
+    },
+    "Corpo4_L4": {
+      "parts": [
+        "Elo4_Balancim_L4",
+        "Buchas_Catalogo_L4"
+      ],
+      "vol_cm3": 65.73174153446321,
+      "mass_kg": 0.5170851370779248,
+      "cg_local_mm": [
+        55.98076211353318,
+        2.2181063334270945e-16,
+        -1.6001197385569874e-13
+      ],
+      "Ixx_cg_kg_m2": 6.85162118026969e-05,
+      "Iyy_cg_kg_m2": 0.000906553322846284,
+      "Izz_cg_kg_m2": 0.0008519334176197548,
+      "Iyy_orig_kg_m2": 0.0025270183700759315
+    },
+    "Corpo5_L5": {
+      "parts": [
+        "Elo5_Garfo_Duplo_L5",
+        "Buchas_Catalogo_L5",
+        "Pino_Eixo_B",
+        "Aneis_Retencao_ORing_B"
+      ],
+      "vol_cm3": 58.38134215618004,
+      "mass_kg": 0.4580744224597012,
+      "cg_local_mm": [
+        50.27733559751615,
+        -0.35432088959161767,
+        -1.7075236405320137e-13
+      ],
+      "Ixx_cg_kg_m2": 9.032634305976253e-05,
+      "Iyy_cg_kg_m2": 0.0007803158148088689,
+      "Izz_cg_kg_m2": 0.0008003211090154419,
+      "Iyy_orig_kg_m2": 0.0019382411381337118
+    },
+    "Corpo6_O5": {
+      "parts": [
+        "Pistao_Embolo_Quadrado",
+        "Navalha_Corte_SAE5160",
+        "Parafusos_Fixacao_Navalha_M6",
+        "Bucha_Catalogo_O5",
+        "Pino_Eixo_O5",
+        "Aneis_Retencao_ORing_O5"
+      ],
+      "vol_cm3": 120.19253482260255,
+      "mass_kg": 0.9427554603354981,
+      "cg_local_mm": [
+        4.519607799360271e-16,
+        0.35904960768565775,
+        -92.9670151933285
+      ],
+      "Ixx_cg_kg_m2": 0.0027764723946951154,
+      "Iyy_cg_kg_m2": 0.0028066947949074027,
+      "Izz_cg_kg_m2": 0.0001247060518283991,
+      "Iyy_orig_kg_m2": 0.010954803828237516
+    },
+    "Sub07_Cavalete_Gabinete": {
+      "parts": [
+        "Quadro_Tubular_Metalon_20x20",
+        "Sapatas_Ancoragem_Piso",
+        "Carenagem_Chapa_Galvanizada",
+        "Visor_Policarbonato_NR12",
+        "Calha_Alimentacao_Segura_NR12",
+        "Reservatorio_Alimentacao_Chapa",
+        "Parafusos_Fixacao_Gabinete_M6",
+        "Calha_Descarga_Chapa",
+        "Reservatorio_Chapa_Coleta",
+        "Suporte_Eixo_Ejetor_NR12",
+        "Mola_Retorno_Pedal"
+      ],
+      "vol_cm3": 2689.5911953986447,
+      "mass_kg": 20.449820500871166,
+      "cg_local_mm": [
+        -22.457500108447594,
+        3.3622337386958057,
+        839.3797756156322
+      ],
+      "Ixx_cg_kg_m2": 4.214301664473399,
+      "Iyy_cg_kg_m2": 4.526396645317065,
+      "Izz_cg_kg_m2": 0.5881680314285466,
+      "Iyy_orig_kg_m2": 18.94480326380225
+    },
+    "Pedal_Alavanca_Ejetora": {
+      "parts": [
+        "Alavanca_Ejetora_Pedal"
+      ],
+      "vol_cm3": 9.127889587649264,
+      "mass_kg": 0.07165393326304674,
+      "cg_local_mm": [
+        20.406838797861443,
+        13.276198476286662,
+        22.44818917770425
+      ],
+      "Ixx_cg_kg_m2": 4.279765425934153e-05,
+      "Iyy_cg_kg_m2": 0.00014730101922100247,
+      "Izz_cg_kg_m2": 0.00011759393027700781,
+      "Iyy_orig_kg_m2": 0.0002132484523763056
+    },
+    "Pedal_Tirante": {
+      "parts": [
+        "Tirante_Pedal_Extracao"
+      ],
+      "vol_cm3": 44.84001935450737,
+      "mass_kg": 0.3519941519328829,
+      "cg_local_mm": [
+        -6.451356397902579e-14,
+        -4.887409964417069,
+        -433.17490199072256
+      ],
+      "Ixx_cg_kg_m2": 0.022768141197634054,
+      "Iyy_cg_kg_m2": 0.022767717860949496,
+      "Izz_cg_kg_m2": 4.006566690286213e-06,
+      "Iyy_orig_kg_m2": 0.08881607501830126
+    },
+    "Pedal_Piso": {
+      "parts": [
+        "Pedal_Extracao"
+      ],
+      "vol_cm3": 95.00045779295235,
+      "mass_kg": 0.7457535936746761,
+      "cg_local_mm": [
+        342.2599040422235,
+        0.08084171569718124,
+        3.1066338751487277
+      ],
+      "Ixx_cg_kg_m2": 0.0001845576240430121,
+      "Iyy_cg_kg_m2": 0.027759953425681657,
+      "Izz_cg_kg_m2": 0.027842524546567264,
+      "Iyy_orig_kg_m2": 0.11512610040117698
+    },
+    "Sub08_Corpo_Prova": {
+      "parts": [
+        "Baru_Simulado_30x50x40"
+      ],
+      "vol_cm3": 31.402186888449414,
+      "mass_kg": 0.034542405577294356,
+      "cg_local_mm": [
+        -0.0055547020094812005,
+        -5.319488248643047e-15,
+        1022.25
+      ],
+      "Ixx_cg_kg_m2": 4.304034147140503e-06,
+      "Iyy_cg_kg_m2": 7.103541260575104e-06,
+      "Izz_cg_kg_m2": 5.89513745988159e-06,
+      "Iyy_orig_kg_m2": 0.03610374681747144
+    }
+  },
+  "totals": {
+    "total_machine_mass_kg": 35.17256830942449,
+    "moving_main_mass_kg": 3.4677765271503187,
+    "moving_pedal_mass_kg": 1.1694016788706056,
+    "static_structure_mass_kg": 30.535390103403564
+  }
+}

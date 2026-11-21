@@ -1,0 +1,23 @@
+﻿---
+# File created by FreeCAD 1.1.4 Revision: 45040 (Git)
+General:
+  UUID: "e3b71ea5-03e3-4367-bade-aa06feadeb64"
+  Name: "Policarbonato_NR12"
+  Description: "Policarbonato compacto transparente 2,0 mm (visor frontal NR-12)"
+Models:
+  Linear Elastic:
+    UUID: "7b561d1d-fb9b-44f6-9da9-56a4f74d7536"
+    Density: "1200 kg/m^3"
+    PoissonRatio: "0.37"
+    UltimateTensileStrength: "65 MPa"
+    YieldStrength: "60 MPa"
+    YoungsModulus: "2350 MPa"
+AppearanceModels:
+  Basic Rendering:
+    UUID: "f006c7e4-35b7-43d5-bbf9-c5d572309e6e"
+    AmbientColor: "(0.24, 0.38, 0.44, 1.0)"
+    DiffuseColor: "(0.55, 0.82, 0.95, 1.0)"
+    EmissiveColor: "(0.00, 0.00, 0.00, 1.0)"
+    Shininess: "0.92"
+    SpecularColor: "(0.96, 0.98, 1.00, 1.0)"
+    Transparency: "0.75"

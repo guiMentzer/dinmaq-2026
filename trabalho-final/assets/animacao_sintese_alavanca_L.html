@@ -1,0 +1,3009 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Síntese Cinemática de 2 Posições &amp; Benchmarking — Prensa de Baru (Design #140)</title>
+<style>
+  :root {
+    --bg: #0a0e17;
+    --bg-panel: #111827;
+    --bg-card: #161f33;
+    --bg-elev: #1c2740;
+    --border: #263452;
+    --border-bright: #364b75;
+    --text: #eef2f9;
+    --text-dim: #93a6c8;
+    --text-muted: #65789b;
+    --blue: #58c4dd;
+    --gold: #ffd166;
+    --coral: #ff6b6b;
+    --green: #5cd68d;
+    --violet: #b388ff;
+    --orange: #ff9f43;
+    --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    --font-math: "STIX Two Math", "Cambria Math", "Times New Roman", Georgia, serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.45;
+    overflow-x: hidden;
+  }
+
+  /* App Shell */
+  .app {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    max-width: 1760px;
+    margin: 0 auto;
+    padding: 10px 14px 12px;
+    gap: 10px;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background: linear-gradient(180deg, #141d31 0%, #101727 100%);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 16px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .brand-badge {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    background: radial-gradient(circle at 30% 30%, rgba(88, 196, 221, 0.25), rgba(179, 136, 255, 0.14));
+    border: 1px solid rgba(88, 196, 221, 0.45);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+
+  .brand-title h1 {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+
+  .brand-title p {
+    font-size: 11.5px;
+    color: var(--text-dim);
+  }
+
+  .mode-switch {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+  }
+
+  .mode-btn {
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    font-family: var(--font-sans);
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 6px 13px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .mode-btn:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+  .mode-btn.active {
+    background: linear-gradient(135deg, rgba(88, 196, 221, 0.22), rgba(179, 136, 255, 0.18));
+    color: #fff;
+    border: 1px solid rgba(88, 196, 221, 0.45);
+    box-shadow: 0 0 14px rgba(88, 196, 221, 0.12);
+  }
+
+  /* Main Grid */
+  .main-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.42fr) minmax(370px, 1fr);
+    gap: 10px;
+    flex: 1;
+    min-height: 0;
+  }
+
+  @media (max-width: 1120px) {
+    .main-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Left Stage */
+  .stage-col {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+  }
+
+  .canvas-card {
+    position: relative;
+    background: radial-gradient(ellipse at 50% 42%, #131c31 0%, #0b101b 100%);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    flex: 1;
+    min-height: 440px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #kinCanvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: grab;
+  }
+  #kinCanvas:active { cursor: grabbing; }
+
+  /* Floating Top Badges on Canvas */
+  .canvas-hud-top {
+    position: absolute;
+    top: 10px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    pointer-events: none;
+  }
+
+  .hud-pill {
+    pointer-events: auto;
+    background: rgba(12, 18, 32, 0.84);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border-bright);
+    border-radius: 8px;
+    padding: 5px 10px;
+    font-size: 11.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--text);
+  }
+
+  .dot-live {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+  }
+  .dot-warn { background: var(--gold); box-shadow: 0 0 8px var(--gold); }
+  .dot-err  { background: var(--coral); box-shadow: 0 0 8px var(--coral); }
+
+  .cam-tools {
+    pointer-events: auto;
+    display: flex;
+    gap: 5px;
+  }
+
+  .mini-btn {
+    appearance: none;
+    background: rgba(14, 21, 36, 0.88);
+    border: 1px solid var(--border-bright);
+    color: var(--text-dim);
+    border-radius: 7px;
+    padding: 5px 9px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .mini-btn:hover { color: #fff; border-color: var(--blue); }
+
+  /* Invalid Warning Overlay */
+  .invalid-banner {
+    position: absolute;
+    top: 48px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 82, 82, 0.18);
+    border: 1px solid rgba(255, 107, 107, 0.7);
+    color: #ffd4d4;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    display: none;
+    backdrop-filter: blur(6px);
+    z-index: 5;
+    text-align: center;
+  }
+  .invalid-banner.visible { display: block; }
+
+  /* 3B1B Narrative & Proof Card */
+  .story-box {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .story-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .scene-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+
+  .scene-num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: rgba(88, 196, 221, 0.16);
+    color: var(--blue);
+    border: 1px solid rgba(88, 196, 221, 0.35);
+  }
+
+  .scene-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .story-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .ctrl-btn {
+    appearance: none;
+    border: 1px solid var(--border-bright);
+    background: var(--bg-card);
+    color: var(--text);
+    border-radius: 7px;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .ctrl-btn:hover { border-color: var(--blue); color: #fff; }
+  .ctrl-btn.primary {
+    background: rgba(88, 196, 221, 0.2);
+    border-color: rgba(88, 196, 221, 0.55);
+    color: #fff;
+  }
+
+  .speed-select {
+    background: var(--bg-card);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 4px 6px;
+    font-size: 11.5px;
+    font-family: var(--font-mono);
+    cursor: pointer;
+  }
+
+  .story-body {
+    display: grid;
+    grid-template-columns: 1.25fr 1fr;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  @media (max-width: 780px) {
+    .story-body { grid-template-columns: 1fr; }
+  }
+
+  .narrative-text {
+    font-size: 12.5px;
+    color: #dce5f5;
+    line-height: 1.52;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 8px;
+    padding: 9px 11px;
+  }
+
+  .eq-panel {
+    background: #0d1322;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--gold);
+    border-radius: 8px;
+    padding: 9px 11px;
+    font-family: var(--font-math);
+    font-size: 13.5px;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .eq-line {
+    font-family: var(--font-mono);
+    font-size: 11.8px;
+    line-height: 1.48;
+    color: #e6eefc;
+  }
+
+  .c-blue   { color: var(--blue); font-weight: 600; }
+  .c-gold   { color: var(--gold); font-weight: 600; }
+  .c-coral  { color: var(--coral); font-weight: 600; }
+  .c-green  { color: var(--green); font-weight: 600; }
+  .c-violet { color: var(--violet); font-weight: 600; }
+
+  /* Scene Stepper Pills */
+  .scene-pills {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  @media (max-width: 760px) {
+    .scene-pills { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+
+  .scene-pill {
+    position: relative;
+    appearance: none;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-dim);
+    border-radius: 7px;
+    padding: 6px 6px 8px;
+    font-size: 10.8px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+    overflow: hidden;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .scene-pill:hover { border-color: var(--border-bright); color: var(--text); }
+  .scene-pill.active {
+    border-color: var(--blue);
+    background: rgba(88, 196, 221, 0.12);
+    color: #fff;
+  }
+  .scene-pill .pill-bar {
+    position: absolute;
+    left: 0; bottom: 0;
+    height: 2.5px;
+    background: linear-gradient(90deg, var(--blue), var(--gold));
+    width: 0%;
+    transition: width 0.08s linear;
+  }
+
+  /* Right Column: Telemetry + Charts + Controls */
+  .right-col {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+  }
+
+  /* Telemetry Grid */
+  .telemetry-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .kpi-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .kpi-label {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .kpi-val {
+    font-family: var(--font-mono);
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .kpi-sub {
+    font-family: var(--font-mono);
+    font-size: 10.8px;
+    color: var(--text-dim);
+  }
+
+  .tag {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 9.8px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+  }
+  .tag-ok   { background: rgba(92, 214, 141, 0.16); color: var(--green); border: 1px solid rgba(92, 214, 141, 0.35); }
+  .tag-warn { background: rgba(255, 209, 102, 0.16); color: var(--gold); border: 1px solid rgba(255, 209, 102, 0.35); }
+  .tag-bad  { background: rgba(255, 107, 107, 0.16); color: var(--coral); border: 1px solid rgba(255, 107, 107, 0.4); }
+
+  /* Charts */
+  .chart-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .chart-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .chart-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .chart-pills {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 2px;
+  }
+
+  .chart-pill {
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 3px 7px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  .chart-pill.active {
+    background: var(--bg-elev);
+    color: #fff;
+    border: 1px solid var(--border-bright);
+  }
+
+  .chart-wrap {
+    position: relative;
+    width: 100%;
+    height: 152px;
+  }
+
+  .chart-wrap canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* Interactive Lab Panel */
+  .lab-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .lab-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .lab-header h2 {
+    font-size: 12.2px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--blue);
+  }
+
+  .presets-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  .preset-btn {
+    appearance: none;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-dim);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .preset-btn:hover { border-color: var(--blue); color: #fff; }
+  .preset-btn.active {
+    background: rgba(88, 196, 221, 0.18);
+    border-color: var(--blue);
+    color: #fff;
+  }
+  .preset-btn.opt { border-color: rgba(92, 214, 141, 0.35); }
+  .preset-btn.sing { border-color: rgba(255, 107, 107, 0.35); }
+
+  .sliders-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 12px;
+  }
+
+  @media (max-width: 600px) {
+    .sliders-grid { grid-template-columns: 1fr; }
+  }
+
+  .slider-item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .slider-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11.2px;
+  }
+
+  .slider-top label { color: var(--text-dim); font-weight: 600; }
+  .slider-top .val { font-family: var(--font-mono); color: #fff; font-weight: 700; }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 5px;
+    background: #202c46;
+    border-radius: 99px;
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--blue);
+    border: 2px solid #0a0e17;
+    cursor: pointer;
+    box-shadow: 0 0 6px rgba(88, 196, 221, 0.5);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--blue);
+    border: 2px solid #0a0e17;
+    cursor: pointer;
+  }
+
+  .dth-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .seg-group {
+    display: flex;
+    gap: 4px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 2px;
+  }
+
+  .seg-btn {
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  .seg-btn.active {
+    background: rgba(88, 196, 221, 0.22);
+    color: #fff;
+    border: 1px solid rgba(88, 196, 221, 0.45);
+  }
+
+  .toggles-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    padding-top: 4px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .chk-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--text-dim);
+    cursor: pointer;
+    user-select: none;
+  }
+  .chk-label input { accent-color: var(--blue); cursor: pointer; }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- HEADER -->
+  <header class="header">
+    <div class="brand">
+      <div class="brand-badge" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <circle cx="6" cy="6" r="2.2" stroke="#5cd68d" stroke-width="2"/>
+          <circle cx="18" cy="10" r="2.2" stroke="#ff6b6b" stroke-width="2"/>
+          <circle cx="10" cy="17" r="2.2" stroke="#58c4dd" stroke-width="2"/>
+          <path d="M6 8.2L10 14.8M11.8 15.8L16.3 11.4M18 10L21 4" stroke="#eef2f9" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="brand-title">
+        <h1>Síntese de 2 Posições &amp; Benchmarking — Prensa de Baru (Alavanca em L #140)</h1>
+        <p>Núcleo Knuckle-Joint Invariante (h = 30,0 mm | Δθ₄ = 30° | F_max = 5,0 kN) • Demonstração Geométrica &amp; Laboratório Paramétrico</p>
+      </div>
+    </div>
+
+    <div class="mode-switch" role="tablist" aria-label="Modo de visualização">
+      <button id="btnModeStory" class="mode-btn active" role="tab" aria-selected="true">▶ Modo História (7 Cenas)</button>
+      <button id="btnModeLab" class="mode-btn" role="tab" aria-selected="false">🎛 Laboratório Interativo</button>
+    </div>
+  </header>
+
+  <!-- MAIN GRID -->
+  <div class="main-grid">
+    <!-- LEFT: KINEMATIC STAGE + STORY NARRATION -->
+    <div class="stage-col">
+      <div class="canvas-card">
+        <canvas id="kinCanvas"></canvas>
+
+        <div class="canvas-hud-top">
+          <div class="hud-pill" id="hudStatusPill">
+            <span class="dot-live" id="hudDot"></span>
+            <span id="hudStatusText">C1 Ref. #140 • δ_L=55° • s=135 mm</span>
+          </div>
+
+          <div class="cam-tools">
+            <button class="mini-btn" id="btnAutoFit" title="Reenquadrar câmera">⌖ Enquadrar</button>
+            <button class="mini-btn" id="btnZoomIn" title="Aproximar">＋</button>
+            <button class="mini-btn" id="btnZoomOut" title="Afastar">－</button>
+          </div>
+        </div>
+
+        <div class="invalid-banner" id="invalidBanner">
+          ⚠ Configuração inválida: salto de ramo ou não-montável (||B(PMI) − B₂|| &gt; 0,5 mm). Ajuste δ_L ou s_offset.
+        </div>
+      </div>
+
+      <!-- STORY MODE PANEL -->
+      <section class="story-box" id="storyPanel">
+        <div class="story-head">
+          <div class="scene-title-wrap">
+            <span class="scene-num" id="sceneBadge">CENA 1 / 7</span>
+            <h2 class="scene-title" id="sceneTitle">O Núcleo Invariante</h2>
+          </div>
+
+          <div class="story-controls">
+            <button class="ctrl-btn" id="btnPrevScene" title="Cena anterior (←)">⏮ Anterior</button>
+            <button class="ctrl-btn primary" id="btnPlayPause" title="Reproduzir / Pausar (Espaço)">⏸ Pausar</button>
+            <button class="ctrl-btn" id="btnNextScene" title="Próxima cena (→)">Próxima ⏭</button>
+            <select id="speedSelect" class="speed-select" title="Velocidade da animação">
+              <option value="0.5">0.5×</option>
+              <option value="1" selected>1.0×</option>
+              <option value="1.5">1.5×</option>
+              <option value="2">2.0×</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="story-body">
+          <div class="narrative-text" id="sceneNarrative"></div>
+          <div class="eq-panel" id="sceneEquations"></div>
+        </div>
+
+        <div class="scene-pills" id="scenePills"></div>
+      </section>
+    </div>
+
+    <!-- RIGHT: TELEMETRY + DUAL CHARTS + LAB CONTROLS -->
+    <div class="right-col">
+      <!-- LIVE TELEMETRY -->
+      <div class="telemetry-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">
+            <span>Pivô O₂ &amp; Biela L₃</span>
+            <span class="tag tag-ok" id="tagColis">SEM COLISÃO</span>
+          </div>
+          <div class="kpi-val" id="kpiO2">[72.0, -146.8] mm</div>
+          <div class="kpi-sub" id="kpiL3">L₃ = 135.59 mm • d = 163.6 mm</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">
+            <span>Transmissão μ(φ)</span>
+            <span class="tag tag-ok" id="tagNorton">NORTON OK</span>
+          </div>
+          <div class="kpi-val" id="kpiMuMin">μ_min = 51.6°</div>
+          <div class="kpi-sub" id="kpiMuSub">μ_q,med = 77.1° • μ_PMI = 92.2°</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">
+            <span>Torque &amp; Meta 60 N</span>
+            <span class="tag tag-warn" id="tagErgo">L₆₀ = 1.06 m</span>
+          </div>
+          <div class="kpi-val" id="kpiTpico">63.7 / 98.9 N·m</div>
+          <div class="kpi-sub" id="kpiL60">L₆₀(lin/bio): 1.06 / 1.65 m</div>
+        </div>
+      </div>
+
+      <!-- CHART 1: TRANSMISSION ANGLE -->
+      <div class="chart-card">
+        <div class="chart-head">
+          <div class="chart-title">
+            <span>1. Ângulo de Transmissão μ(φ)</span>
+            <span style="font-size:10.5px; color:var(--green); font-weight:600;">Faixa Norton [40°, 140°]</span>
+          </div>
+          <span class="kpi-sub" id="chartMuLive" style="color:var(--gold);">φ = 0.0% • μ = —</span>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="chartMu"></canvas>
+        </div>
+      </div>
+
+      <!-- CHART 2: TORQUE / HAND FORCE -->
+      <div class="chart-card">
+        <div class="chart-head">
+          <div class="chart-title">
+            <span>2. Esforço na Alavanca</span>
+            <span class="kpi-sub" id="chartTLive" style="color:var(--blue);">—</span>
+          </div>
+          <div class="chart-pills">
+            <button class="chart-pill active" id="pillMetricForce">F_mão(φ) [N]</button>
+            <button class="chart-pill" id="pillMetricTorque">Torque T(φ) [N·m]</button>
+            <select id="armLenSelect" class="speed-select" style="padding:2px 5px; font-size:10.5px;" title="Comprimento da empunhadura L_alav">
+              <option value="1.05" selected>L = 1,05 m</option>
+              <option value="0.71">L = 0,71 m</option>
+              <option value="0.45">L = 0,45 m</option>
+              <option value="1.56">L = 1,56 m</option>
+            </select>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="chartTorque"></canvas>
+        </div>
+      </div>
+
+      <!-- INTERACTIVE LAB CONTROLS -->
+      <section class="lab-card" id="labPanel">
+        <div class="lab-header">
+          <h2>Controles Paramétricos &amp; Camadas</h2>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <button class="mini-btn" id="btnLabPlay" title="Animar ciclo PMS ↔ PMI">▶ Animar Ciclo</button>
+          </div>
+        </div>
+
+        <div class="presets-row" id="presetsRow">
+          <button class="preset-btn active" data-preset="C1">C1 Ref. #140</button>
+          <button class="preset-btn opt" data-preset="C4">C4 Ótimo #140-B</button>
+          <button class="preset-btn opt" data-preset="C8">C8 Arco 90°</button>
+          <button class="preset-btn sing" data-preset="C9">C9 Singul. 70°</button>
+          <button class="preset-btn" data-preset="C7">C7 Esq. -X</button>
+          <button class="preset-btn" data-preset="C2">C2 Prox.</button>
+          <button class="preset-btn" data-preset="C5">C5 L Aberto</button>
+        </div>
+
+        <div class="sliders-grid">
+          <div class="slider-item">
+            <div class="slider-top">
+              <label for="sldS">Posição na Mediatriz (s_offset)</label>
+              <span class="val" id="valS">135 mm</span>
+            </div>
+            <input type="range" id="sldS" min="-160" max="250" step="1" value="135" />
+          </div>
+
+          <div class="slider-item">
+            <div class="slider-top">
+              <label for="sldDeltaL">Ângulo da Dobra em L (δ_L)</label>
+              <span class="val" id="valDeltaL">55° (γ=125°)</span>
+            </div>
+            <input type="range" id="sldDeltaL" min="15" max="115" step="1" value="55" />
+          </div>
+
+          <div class="slider-item">
+            <div class="slider-top">
+              <label for="sldPhi">Progresso do Curso (φ)</label>
+              <span class="val" id="valPhi">0.0% (0.0°)</span>
+            </div>
+            <input type="range" id="sldPhi" min="0" max="100" step="0.25" value="0" />
+          </div>
+
+          <div class="dth-row">
+            <span style="font-size:11.2px; color:var(--text-dim); font-weight:600;">Arco Δθ_alav:</span>
+            <div class="seg-group" id="dthGroup">
+              <button class="seg-btn active" data-dth="60">60°</button>
+              <button class="seg-btn" data-dth="75">75°</button>
+              <button class="seg-btn" data-dth="90">90°</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="toggles-row">
+          <label class="chk-label"><input type="checkbox" id="chkPara" checked /> Paralelogramos</label>
+          <label class="chk-label"><input type="checkbox" id="chkP1P2" checked /> Construção P₁, P₂ &amp; Mediatriz</label>
+          <label class="chk-label"><input type="checkbox" id="chkMuArc" checked /> Arco μ(φ)</label>
+          <label class="chk-label"><input type="checkbox" id="chkColis" checked /> Zona Colisão Guia</label>
+          <label class="chk-label"><input type="checkbox" id="chkVectors" checked /> Vetores v / F</label>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  // =========================================================================
+  // 1. EXACT MATHEMATICAL MODEL (Parity with benchmarking_alavanca_L_design140.m)
+  // =========================================================================
+  const DEG2RAD = Math.PI / 180.0;
+  const RAD2DEG = 180.0 / Math.PI;
+
+  const CONST = Object.freeze({
+    h_curso: 30.0,
+    delta_q: 10.0,
+    F_max: 5000.0,
+    F_alvo: 60.0,
+    dt_deg: 30.0,
+    dt: 30.0 * DEG2RAD,
+    L4: 30.0 / (2.0 * (1.0 - Math.cos(30.0 * DEG2RAD))),
+    L5: 30.0 / (2.0 * (1.0 - Math.cos(30.0 * DEG2RAD))),
+    mu_guia: 0.10,
+    eta_juntas: 0.96,
+    L2: 70.0
+  });
+
+  const O4 = { x: 0.0, y: 0.0 };
+  const B2 = { x: 0.0, y: -CONST.L4 };
+  const B1 = {
+    x: -CONST.L4 * Math.sin(CONST.dt),
+    y: -CONST.L4 * Math.cos(CONST.dt)
+  };
+  const Y_PMI = -2.0 * CONST.L4;
+  const Y_PMS = -2.0 * CONST.L4 * Math.cos(CONST.dt);
+  const Y_CONTATO = Y_PMI + CONST.delta_q;
+
+  function octaveGradient(arr, h) {
+    const n = arr.length;
+    const out = new Float64Array(n);
+    if (n < 2) return out;
+    out[0] = (arr[1] - arr[0]) / h;
+    for (let k = 1; k < n - 1; k++) {
+      out[k] = (arr[k + 1] - arr[k - 1]) / (2.0 * h);
+    }
+    out[n - 1] = (arr[n - 1] - arr[n - 2]) / h;
+    return out;
+  }
+
+  function avaliarConfig(L2, delta_L_deg, s_offset, dth_deg) {
+    const th_pms_deg = 0.5 * dth_deg + delta_L_deg;
+    const th_pmi_deg = th_pms_deg - dth_deg;
+    const th_pms = th_pms_deg * DEG2RAD;
+    const th_pmi = th_pmi_deg * DEG2RAD;
+
+    const v1 = { x: L2 * Math.cos(th_pms), y: L2 * Math.sin(th_pms) };
+    const v2 = { x: L2 * Math.cos(th_pmi), y: L2 * Math.sin(th_pmi) };
+    const P1 = { x: B1.x - v1.x, y: B1.y - v1.y };
+    const P2 = { x: B2.x - v2.x, y: B2.y - v2.y };
+
+    const dP = { x: P2.x - P1.x, y: P2.y - P1.y };
+    const normDP = Math.hypot(dP.x, dP.y);
+
+    const out = {
+      valid: false,
+      reason: "",
+      L2, L4: CONST.L4, L5: CONST.L5,
+      delta_L: delta_L_deg,
+      gamma_L: 180.0 - delta_L_deg,
+      s_offset,
+      dth_deg,
+      th_pms_deg, th_pmi_deg,
+      th_pms, th_pmi,
+      v1, v2, P1, P2, dP,
+      midP: { x: 0.5 * (P1.x + P2.x), y: 0.5 * (P1.y + P2.y) },
+      nP: { x: 1, y: 0 },
+      O2: { x: 0, y: 0 },
+      A1: { x: 0, y: 0 },
+      A2: { x: 0, y: 0 },
+      d_base: 0,
+      L3: 0,
+      sgn: 1,
+      livre_colis: false
+    };
+
+    if (normDP < 1e-6) {
+      out.reason = "P₁ e P₂ coincidentes (||dP|| ≈ 0)";
+      return out;
+    }
+
+    let nPx = -dP.y / normDP;
+    let nPy = dP.x / normDP;
+    if (nPx < 0) {
+      nPx = -nPx;
+      nPy = -nPy;
+    }
+    out.nP = { x: nPx, y: nPy };
+
+    const O2 = {
+      x: out.midP.x + s_offset * nPx,
+      y: out.midP.y + s_offset * nPy
+    };
+    out.O2 = O2;
+    out.A1 = { x: O2.x + v1.x, y: O2.y + v1.y };
+    out.A2 = { x: O2.x + v2.x, y: O2.y + v2.y };
+    out.L3 = Math.hypot(P2.x - O2.x, P2.y - O2.y);
+    out.d_base = Math.hypot(O2.x, O2.y);
+    out.livre_colis = (O2.x >= 35.0) || (O2.x <= -55.0);
+
+    const N = 401;
+    const th2_rad = new Float64Array(N);
+    const phi_deg = new Float64Array(N);
+    const phi_norm = new Float64Array(N);
+    const Ax = new Float64Array(N);
+    const Ay = new Float64Array(N);
+    const dA = new Float64Array(N);
+    const a_c = new Float64Array(N);
+    const h_c = new Float64Array(N);
+
+    for (let k = 0; k < N; k++) {
+      const u = k / (N - 1);
+      th2_rad[k] = th_pms + u * (th_pmi - th_pms);
+      phi_deg[k] = u * dth_deg;
+      phi_norm[k] = u * 100.0;
+      Ax[k] = O2.x + L2 * Math.cos(th2_rad[k]);
+      Ay[k] = O2.y + L2 * Math.sin(th2_rad[k]);
+      dA[k] = Math.hypot(Ax[k], Ay[k]);
+      if (dA[k] < 1e-6) {
+        out.reason = "Pino A colide com O₄ (dA ≈ 0)";
+        return out;
+      }
+      a_c[k] = (CONST.L4 * CONST.L4 - out.L3 * out.L3 + dA[k] * dA[k]) / (2.0 * dA[k]);
+      const arg_h = CONST.L4 * CONST.L4 - a_c[k] * a_c[k];
+      if (arg_h < -1e-6) {
+        out.reason = "Não-montável: círculo da biela L₃ não intercepta balancim L₄";
+        return out;
+      }
+      h_c[k] = Math.sqrt(Math.max(0.0, arg_h));
+    }
+
+    const dphi = (phi_deg[1] - phi_deg[0]) * DEG2RAD;
+    const x2_1 = a_c[0] * Ax[0] / dA[0];
+    const y2_1 = a_c[0] * Ay[0] / dA[0];
+    const Bpx = x2_1 + h_c[0] * (-Ay[0]) / dA[0];
+    const Bpy = y2_1 + h_c[0] * (Ax[0]) / dA[0];
+    const Bmx = x2_1 - h_c[0] * (-Ay[0]) / dA[0];
+    const Bmy = y2_1 - h_c[0] * (Ax[0]) / dA[0];
+    const dBp = Math.hypot(Bpx - B1.x, Bpy - B1.y);
+    const dBm = Math.hypot(Bmx - B1.x, Bmy - B1.y);
+    const sgn = (dBp < dBm) ? 1 : -1;
+    out.sgn = sgn;
+
+    const Bx = new Float64Array(N);
+    const By = new Float64Array(N);
+    const y_p = new Float64Array(N);
+    const th3_rad = new Float64Array(N);
+    const th4_rad = new Float64Array(N);
+    const beta5 = new Float64Array(N);
+    const mu_deg = new Float64Array(N);
+
+    let y_p_max = -Infinity;
+    let y_p_min = Infinity;
+
+    for (let k = 0; k < N; k++) {
+      Bx[k] = a_c[k] * Ax[k] / dA[k] + sgn * h_c[k] * (-Ay[k]) / dA[k];
+      By[k] = a_c[k] * Ay[k] / dA[k] + sgn * h_c[k] * (Ax[k]) / dA[k];
+      y_p[k] = By[k] - Math.sqrt(Math.max(0.0, CONST.L5 * CONST.L5 - Bx[k] * Bx[k]));
+      if (y_p[k] > y_p_max) y_p_max = y_p[k];
+      if (y_p[k] < y_p_min) y_p_min = y_p[k];
+
+      th3_rad[k] = Math.atan2(By[k] - Ay[k], Bx[k] - Ax[k]);
+      th4_rad[k] = Math.atan2(By[k], Bx[k]);
+      beta5[k] = Math.asin(Math.min(1.0, Math.abs(Bx[k]) / CONST.L5));
+
+      let da = Math.abs(th4_rad[k] - th3_rad[k]) % (2.0 * Math.PI);
+      if (da > Math.PI) da = 2.0 * Math.PI - da;
+      mu_deg[k] = da * RAD2DEG;
+    }
+
+    if (Math.hypot(Bx[N - 1] - B2.x, By[N - 1] - B2.y) > 0.5) {
+      out.reason = "Salto de ramo: mecanismo não atinge B₂ no PMI";
+      return out;
+    }
+    if ((y_p_max - y_p[0] > 0.5) || (y_p[N - 1] - y_p_min > 0.5)) {
+      out.reason = "Curso não-monotônico (inversão intermediária)";
+      return out;
+    }
+
+    const y_p_m = new Float64Array(N);
+    for (let k = 0; k < N; k++) y_p_m[k] = y_p[k] * 1e-3;
+    const grad_y = octaveGradient(y_p_m, dphi);
+
+    const hp_m = new Float64Array(N);
+    const eta_mec = new Float64Array(N);
+    const s_pen = new Float64Array(N);
+    const T_lin = new Float64Array(N);
+    const T_bio = new Float64Array(N);
+    const idx_q = [];
+
+    for (let k = 0; k < N; k++) {
+      hp_m[k] = Math.abs(grad_y[k]);
+      eta_mec[k] = (1.0 - CONST.mu_guia * Math.tan(beta5[k])) * CONST.eta_juntas;
+      s_pen[k] = Math.max(0.0, (Y_CONTATO - y_p[k]) / CONST.delta_q);
+      if (s_pen[k] > 0) idx_q.push(k);
+      T_lin[k] = (CONST.F_max * s_pen[k] * hp_m[k]) / eta_mec[k];
+      T_bio[k] = (CONST.F_max * Math.pow(s_pen[k], 0.4) * hp_m[k]) / eta_mec[k];
+    }
+
+    if (idx_q.length < 5) {
+      out.reason = "Zona de corte insuficiente (< 5 amostras)";
+      return out;
+    }
+
+    let mu_min = Infinity, mu_max = -Infinity, mu_sum = 0;
+    for (let k = 0; k < N; k++) {
+      if (mu_deg[k] < mu_min) mu_min = mu_deg[k];
+      if (mu_deg[k] > mu_max) mu_max = mu_deg[k];
+      mu_sum += mu_deg[k];
+    }
+    let mu_q_min = Infinity, mu_q_max = -Infinity, mu_q_sum = 0;
+    for (const k of idx_q) {
+      if (mu_deg[k] < mu_q_min) mu_q_min = mu_deg[k];
+      if (mu_deg[k] > mu_q_max) mu_q_max = mu_deg[k];
+      mu_q_sum += mu_deg[k];
+    }
+
+    let T_lin_pico = 0, T_bio_pico = 0;
+    for (let k = 0; k < N; k++) {
+      if (T_lin[k] > T_lin_pico) T_lin_pico = T_lin[k];
+      if (T_bio[k] > T_bio_pico) T_bio_pico = T_bio[k];
+    }
+
+    out.valid = true;
+    out.N = N;
+    out.th2_rad = th2_rad;
+    out.phi_deg = phi_deg;
+    out.phi_norm = phi_norm;
+    out.Ax = Ax; out.Ay = Ay;
+    out.Bx = Bx; out.By = By;
+    out.y_p = y_p;
+    out.th3_rad = th3_rad;
+    out.th4_rad = th4_rad;
+    out.beta5 = beta5;
+    out.mu_deg = mu_deg;
+    out.hp_m = hp_m;
+    out.eta_mec = eta_mec;
+    out.s_pen = s_pen;
+    out.T_lin = T_lin;
+    out.T_bio = T_bio;
+    out.idx_q_start = idx_q[0];
+    out.phi_q_norm = phi_norm[idx_q[0]];
+    out.span_q_deg = dth_deg - phi_deg[idx_q[0]];
+    out.mu_min = mu_min;
+    out.mu_max = mu_max;
+    out.mu_mean = mu_sum / N;
+    out.mu_q_ini = mu_deg[idx_q[0]];
+    out.mu_q_min = mu_q_min;
+    out.mu_q_max = mu_q_max;
+    out.mu_q_mean = mu_q_sum / idx_q.length;
+    out.mu_pmi = mu_deg[N - 1];
+    out.T_lin_pico = T_lin_pico;
+    out.T_bio_pico = T_bio_pico;
+    out.L60_lin = T_lin_pico / CONST.F_alvo;
+    out.L60_bio = T_bio_pico / CONST.F_alvo;
+    out.F_1050_lin = T_lin_pico / 1.05;
+    out.F_1050_bio = T_bio_pico / 1.05;
+    return out;
+  }
+
+  function samplePoseAt(res, phi01) {
+    const u = Math.max(0, Math.min(1, phi01));
+    const th2 = res.th_pms + u * (res.th_pmi - res.th_pms);
+    const thHandle = th2 - res.delta_L * DEG2RAD;
+    const A = {
+      x: res.O2.x + res.L2 * Math.cos(th2),
+      y: res.O2.y + res.L2 * Math.sin(th2)
+    };
+    if (!res.valid) {
+      return { u, th2, thHandle, A, B: null, y_p: null, mu_deg: 0, s_pen: 0, hp_m: 0, T_lin: 0, T_bio: 0 };
+    }
+    const dA = Math.hypot(A.x, A.y);
+    const a_c = (CONST.L4 * CONST.L4 - res.L3 * res.L3 + dA * dA) / (2.0 * dA);
+    const h_c = Math.sqrt(Math.max(0.0, CONST.L4 * CONST.L4 - a_c * a_c));
+    const B = {
+      x: a_c * A.x / dA + res.sgn * h_c * (-A.y) / dA,
+      y: a_c * A.y / dA + res.sgn * h_c * (A.x) / dA
+    };
+    const y_p = B.y - Math.sqrt(Math.max(0.0, CONST.L5 * CONST.L5 - B.x * B.x));
+    const th3 = Math.atan2(B.y - A.y, B.x - A.x);
+    const th4 = Math.atan2(B.y, B.x);
+    let da = Math.abs(th4 - th3) % (2.0 * Math.PI);
+    if (da > Math.PI) da = 2.0 * Math.PI - da;
+    const mu_deg = da * RAD2DEG;
+    const s_pen = Math.max(0.0, (Y_CONTATO - y_p) / CONST.delta_q);
+
+    // Smooth linear interpolation of derivative-based curves
+    const fIdx = u * (res.N - 1);
+    const i0 = Math.min(res.N - 2, Math.floor(fIdx));
+    const frac = fIdx - i0;
+    const lerp = (a, b) => a + frac * (b - a);
+    return {
+      u, th2, thHandle, A, B, y_p, th3, th4, mu_deg, s_pen,
+      hp_m: lerp(res.hp_m[i0], res.hp_m[i0 + 1]),
+      T_lin: lerp(res.T_lin[i0], res.T_lin[i0 + 1]),
+      T_bio: lerp(res.T_bio[i0], res.T_bio[i0 + 1])
+    };
+  }
+
+  // =========================================================================
+  // 2. PRESETS & REFERENCE CACHE
+  // =========================================================================
+  const PRESETS = {
+    C1: { id: "C1", name: "C1 Ref. #140",     deltaL: 55,  s: 135,  dth: 60, color: "#58c4dd" },
+    C2: { id: "C2", name: "C2 O₂ Proximal",   deltaL: 55,  s: 95,   dth: 60, color: "#ff9f43" },
+    C4: { id: "C4", name: "C4 Ótimo #140-B",  deltaL: 40,  s: 135,  dth: 60, color: "#5cd68d" },
+    C5: { id: "C5", name: "C5 L Aberto",      deltaL: 30,  s: 160,  dth: 60, color: "#38bdf8" },
+    C7: { id: "C7", name: "C7 Esq. -X",       deltaL: 55,  s: -135, dth: 60, color: "#c084fc" },
+    C8: { id: "C8", name: "C8 Arco 90°",      deltaL: 15,  s: 120,  dth: 90, color: "#ffd166" },
+    C9: { id: "C9", name: "C9 Singul. 70°",   deltaL: 70,  s: 135,  dth: 60, color: "#ff6b6b" }
+  };
+
+  const CACHE_REF = {
+    C1: avaliarConfig(CONST.L2, 55, 135, 60),
+    C4: avaliarConfig(CONST.L2, 40, 135, 60),
+    C8: avaliarConfig(CONST.L2, 15, 120, 90),
+    C9: avaliarConfig(CONST.L2, 70, 135, 60)
+  };
+
+  // =========================================================================
+  // 3. EASING & 7-SCENE STORY CHOREOGRAPHY
+  // =========================================================================
+  const clamp01 = (x) => Math.max(0, Math.min(1, x));
+  const easeInOutCubic = (x) => {
+    const t = clamp01(x);
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  };
+  const smoothstep = (e0, e1, x) => easeInOutCubic((x - e0) / (e1 - e0));
+  const lerp = (a, b, t) => a + (b - a) * t;
+
+  const SCENES = [
+    {
+      id: 1,
+      short: "1. Núcleo",
+      title: "Cena 1 — O Núcleo Invariante (L₄, L₅ e Curso de 30 mm)",
+      duration: 10.5,
+      narrative: `Toda a prensa apoia-se em um núcleo knuckle-joint <b>invariante</b>: o balancim <span class="c-green">L₄</span> e a biela da navalha <span class="c-violet">L₅</span> têm o mesmo comprimento (111,96 mm). Quando B oscila <b>Δθ₄ = 30°</b> entre B₁ (PMS) e B₂ (PMI vertical), o pistão O₅ percorre exatamente <b>h = 30,0 mm</b>, com os últimos <span class="c-gold">10,0 mm</span> dedicados à quebra do baru (até 5,0 kN).`,
+      equations: `
+        <div class="eq-line"><span class="c-green">L₄</span> = <span class="c-violet">L₅</span> = h / [2(1 − cos 30°)] = <b>111,96 mm</b></div>
+        <div class="eq-line">B₁ = [−55,98; −96,96] mm &nbsp;→&nbsp; B₂ = [0; −111,96] mm</div>
+        <div class="eq-line">y_PMS = −193,92 mm &nbsp;→&nbsp; y_PMI = −223,92 mm (<span class="c-gold">δ_q = 10 mm</span>)</div>
+      `,
+      evaluate(t) {
+        // Oscillate between PMS (0) and PMI (1) smoothly twice to highlight stroke
+        const phase = Math.sin(Math.PI * 2.0 * t - Math.PI / 2) * 0.5 + 0.5;
+        return {
+          deltaL: 55, sOffset: 135, dthDeg: 60,
+          phi01: phase,
+          activeName: "Núcleo Invariante L₄–L₅",
+          camera: { x: -18, y: -120, span: 290 },
+          layers: {
+            coreOnly: true,
+            showLever: false,
+            showCoupler: false,
+            showP1P2: false,
+            showPara: false,
+            showBisector: false,
+            showMuArc: false,
+            showColis: false,
+            showVectors: true,
+            highlightStroke: true,
+            highlightBreakZone: true
+          }
+        };
+      }
+    },
+    {
+      id: 2,
+      short: "2. Problema",
+      title: "Cena 2 — O Problema da Síntese de 2 Posições",
+      duration: 10.5,
+      narrative: `Queremos acionar B₁ → B₂ com uma <b>alavanca em L</b> ergonômica (<span class="c-coral">L₂ = 70 mm</span>) cuja empunhadura varre <b>+30° → −30°</b> (Δθ = 60° horário). O pivô fixo <span class="c-coral">O₂</span> e a biela <span class="c-blue">L₃</span> são incógnitos, mas exigem comprimento rígido igual nas duas poses extremas: <b>‖B₁ − A₁‖ = ‖B₂ − A₂‖ = L₃</b>.`,
+      equations: `
+        <div class="eq-line">θ_PMS = 85° (<span class="c-coral">v₁</span>) &nbsp;|&nbsp; θ_PMI = 25° (<span class="c-coral">v₂</span>) &nbsp;[Δθ_alav = 60°]</div>
+        <div class="eq-line">Incógnita: pivô <span class="c-coral">O₂ = (X, Y)</span> e biela <span class="c-blue">L₃</span></div>
+        <div class="eq-line">Restrição: <span class="c-blue">‖B₁ − (O₂ + v₁)‖ = ‖B₂ − (O₂ + v₂)‖ = L₃</span></div>
+      `,
+      evaluate(t) {
+        const reveal = smoothstep(0.08, 0.35, t);
+        const drift = Math.sin(t * Math.PI * 2) * 14 * (1 - smoothstep(0.75, 1.0, t));
+        return {
+          deltaL: 55, sOffset: 135 + drift, dthDeg: 60,
+          phi01: t < 0.5 ? 0 : 1,
+          activeName: "Problema de Síntese (O₂ incógnito)",
+          camera: { x: 45, y: -120, span: 350 },
+          layers: {
+            coreOnly: false,
+            showLever: true,
+            showCoupler: false,
+            showGhostPoses: reveal,
+            showUnknownO2: true,
+            showTargetLinks: reveal,
+            showP1P2: false,
+            showPara: false,
+            showBisector: false,
+            showMuArc: false,
+            showColis: false,
+            showVectors: false
+          }
+        };
+      }
+    },
+    {
+      id: 3,
+      short: "3. Translação",
+      title: "Cena 3 — O Truque da Translação (P₁, P₂ e Paralelogramos)",
+      duration: 12.5,
+      narrative: `Como eliminar O₂ da condição de igualdade? Transladamos os vetores <span class="c-coral">−v₁</span> a partir de B₁ até <span class="c-blue">P₁</span> e <span class="c-coral">−v₂</span> a partir de B₂ até <span class="c-blue">P₂</span>. Isso forma dois <b>paralelogramos vetoriais</b> (O₂A₁B₁P₁ e O₂A₂B₂P₂) cujos lados opostos garantem <b>‖O₂P₁‖ = ‖A₁B₁‖</b> e <b>‖O₂P₂‖ = ‖A₂B₂‖</b>!`,
+      equations: `
+        <div class="eq-line"><span class="c-blue">P₁</span> = B₁ − <span class="c-coral">v₁</span> = [−62,08; −166,69] mm</div>
+        <div class="eq-line"><span class="c-blue">P₂</span> = B₂ − <span class="c-coral">v₂</span> = [−63,44; −141,54] mm</div>
+        <div class="eq-line">Paralelogramos ⇒ <span class="c-gold">‖O₂ − P₁‖ = ‖O₂ − P₂‖ = L₃</span></div>
+      `,
+      evaluate(t) {
+        const slideT = smoothstep(0.18, 0.56, t);
+        const paraT = smoothstep(0.54, 0.84, t);
+        return {
+          deltaL: 55, sOffset: 135, dthDeg: 60,
+          phi01: 0,
+          activeName: "Prova dos Paralelogramos (O₂AᵢBᵢPᵢ)",
+          camera: { x: 32, y: -125, span: 335 },
+          layers: {
+            coreOnly: false,
+            showLever: true,
+            showCoupler: true,
+            showGhostPoses: 1,
+            showSlideVectors: slideT,
+            showP1P2: slideT > 0.4,
+            showPara: paraT,
+            showBisector: false,
+            showMuArc: false,
+            showColis: false,
+            showVectors: false
+          }
+        };
+      }
+    },
+    {
+      id: 4,
+      short: "4. Mediatriz",
+      title: "Cena 4 — A Mediatriz de P₁P₂ e o Parâmetro s_offset",
+      duration: 12.0,
+      narrative: `O lugar geométrico dos pontos equidistantes de P₁ e P₂ é a <b>mediatriz</b> perpendicular a P₁P₂ passando por midP. Qualquer escolha de <span class="c-gold">s_offset</span> sobre <span class="c-violet">n_P</span> gera um mecanismo exato! Afastar O₂ para <b>s ≥ 98 mm</b> (O₂ₓ ≥ 35 mm) evita a <span class="c-coral">zona de colisão da guia</span>, com L₃ ≈ s.`,
+      equations: `
+        <div class="eq-line">midP = ½(P₁ + P₂) &nbsp;|&nbsp; <span class="c-violet">n_P</span> ⊥ (P₂ − P₁), n_Px &gt; 0</div>
+        <div class="eq-line"><span class="c-coral">O₂(s)</span> = midP + <span class="c-gold">s_offset</span> · <span class="c-violet">n_P</span></div>
+        <div class="eq-line">Livre de colisão: <span class="c-green">O₂ₓ ≥ 35 mm</span> (ou ≤ −55 mm)</div>
+      `,
+      evaluate(t) {
+        // Sweep s_offset from 55 (inside collision!) -> 210 -> settle at 135
+        let s;
+        if (t < 0.25) {
+          s = 135;
+        } else if (t < 0.65) {
+          s = lerp(55, 210, smoothstep(0.25, 0.65, t));
+        } else {
+          s = lerp(210, 135, smoothstep(0.65, 0.92, t));
+        }
+        return {
+          deltaL: 55, sOffset: s, dthDeg: 60,
+          phi01: 0,
+          activeName: `Varredura na Mediatriz (s = ${s.toFixed(0)} mm)`,
+          camera: { x: 45, y: -125, span: 365 },
+          layers: {
+            coreOnly: false,
+            showLever: true,
+            showCoupler: true,
+            showP1P2: true,
+            showPara: 0.28,
+            showBisector: true,
+            showEqualRadii: smoothstep(0.15, 0.35, t),
+            showMuArc: true,
+            showColis: true,
+            showVectors: false
+          }
+        };
+      }
+    },
+    {
+      id: 5,
+      short: "5. Ângulo δ_L",
+      title: "Cena 5 — O Papel de δ_L: Otimização (C4) vs. Singularidade (C9)",
+      duration: 13.0,
+      narrative: `Sem mudar o arco ergonômico (+30° → −30°), girar a dobra interna da alavanca (<span class="c-gold">δ_L</span>) inclina a mediatriz no plano XY. Reduzir δ_L = 55° (<span class="c-blue">C1</span>) para <b>40° (<span class="c-green">C4 Ótimo</span>)</b> eleva μ_min para <b>67,4°</b>. Já em <b>δ_L = 70° (<span class="c-coral">C9</span>)</b>, L₂ e L₃ quase colineam e μ_min despenca para <b>9,6°</b>!`,
+      equations: `
+        <div class="eq-line"><span class="c-blue">C1 (δ_L=55°)</span>: μ_min = 51,6° &nbsp;|&nbsp; μ_q,med = 77,1°</div>
+        <div class="eq-line"><span class="c-green">C4 (δ_L=40°)</span>: μ_min = <b>67,4°</b> &nbsp;|&nbsp; μ_q,med = <b>97,4°</b></div>
+        <div class="eq-line"><span class="c-coral">C9 (δ_L=70°)</span>: μ_min = <b>9,6°</b> (&lt; 40° Norton — Rejeitado!)</div>
+      `,
+      evaluate(t) {
+        let dL;
+        if (t < 0.25) {
+          dL = 55;
+        } else if (t < 0.58) {
+          dL = lerp(55, 40, smoothstep(0.25, 0.48, t));
+        } else {
+          dL = lerp(40, 70, smoothstep(0.58, 0.86, t));
+        }
+        const phi = t < 0.62 ? 0.15 : lerp(0.15, 0.02, smoothstep(0.62, 0.84, t));
+        return {
+          deltaL: dL, sOffset: 135, dthDeg: 60,
+          phi01: phi,
+          activeName: `Variação de δ_L (${dL.toFixed(1)}°)`,
+          camera: { x: 40, y: -125, span: 365 },
+          compareMu: ["C1", "C4", "C9"],
+          layers: {
+            coreOnly: false,
+            showLever: true,
+            showCoupler: true,
+            showP1P2: true,
+            showPara: 0.25,
+            showBisector: true,
+            showMuArc: true,
+            showColis: true,
+            showVectors: false
+          }
+        };
+      }
+    },
+    {
+      id: 6,
+      short: "6. Ciclo PMS→PMI",
+      title: "Cena 6 — Ciclo Completo em Ação (Efeito Joelho no PMI)",
+      duration: 12.0,
+      narrative: `No <b>C4 Ótimo #140-B</b> (δ_L = 40°, s = 135 mm), acionamos a puxada horária completa (φ = 0% → 100%). Observe o <b>efeito joelho</b> nos últimos 10 mm: o ângulo de transmissão <span class="c-green">μ(φ)</span> permanece ideal (67°–114°), enquanto a velocidade |dy_p/dφ| → 0 multiplica a força no endocarpo do baru!`,
+      equations: `
+        <div class="eq-line"><span class="c-green">C4 Ótimo</span>: O₂ = [55,4; −180,4] mm &nbsp;|&nbsp; L₃ = 136,48 mm</div>
+        <div class="eq-line">Zona de Quebra: ocupa <b>38,4°</b> dos 60° (64% do giro!)</div>
+        <div class="eq-line">η_mec = (1 − 0,10·tan β₅)·0,96 &nbsp;|&nbsp; |dy_p/dφ|_PMI → 0</div>
+      `,
+      evaluate(t) {
+        // Slower easing at the breaking end so user appreciates toggle amplification
+        const phi = easeInOutCubic(t);
+        return {
+          deltaL: 40, sOffset: 135, dthDeg: 60,
+          phi01: phi,
+          activeName: "C4 Ótimo #140-B — Ciclo PMS → PMI",
+          camera: { x: 52, y: -132, span: 375 },
+          layers: {
+            coreOnly: false,
+            showLever: true,
+            showCoupler: true,
+            showP1P2: false,
+            showPara: false,
+            showBisector: false,
+            showMuArc: true,
+            showColis: true,
+            showVectors: true,
+            highlightBreakZone: true
+          }
+        };
+      }
+    },
+    {
+      id: 7,
+      short: "7. Meta 60 N",
+      title: "Cena 7 — Energia, Torque e a Meta F_mão ≤ 60 N (C8 Arco 90°)",
+      duration: 12.0,
+      narrative: `O trabalho mecânico W = ∫T dφ é fixo pela resistência do baru. Ao expandir o arco da empunhadura de 60° para <b>90° (<span class="c-gold">C8: δ_L=15°, s=120</span>)</b>, o torque de pico cai <b>~32%</b> (63,7 → <b>42,8 N·m</b> linear; 98,9 → <b>68,2 N·m</b> bio). Assim, <b>L₆₀N = 0,71 m</b> (linear) / <b>1,14 m</b> (bio)!`,
+      equations: `
+        <div class="eq-line"><span class="c-blue">C1 (60°)</span>: T_lin = 63,69 N·m &nbsp;→&nbsp; L₆₀N = 1,06 m (lin) / 1,65 m (bio)</div>
+        <div class="eq-line"><span class="c-gold">C8 (90°)</span>: T_lin = <b>42,78 N·m (−33%)</b> &nbsp;→&nbsp; L₆₀N = <b>0,71 m</b> / <b>1,14 m</b></div>
+        <div class="eq-line">Em L = 1,05 m: F_mão = <b>40,7 N</b> (lin) / <b>65,0 N</b> (bio)</div>
+      `,
+      evaluate(t) {
+        const phi = easeInOutCubic(t);
+        return {
+          deltaL: 15, sOffset: 120, dthDeg: 90,
+          phi01: phi,
+          activeName: "C8 Arco 90° (+45° → −45°)",
+          camera: { x: 48, y: -125, span: 365 },
+          compareTorque: ["C1", "C8"],
+          layers: {
+            coreOnly: false,
+            showLever: true,
+            showCoupler: true,
+            showP1P2: false,
+            showPara: false,
+            showBisector: false,
+            showMuArc: true,
+            showColis: true,
+            showVectors: true,
+            highlightBreakZone: true
+          }
+        };
+      }
+    }
+  ];
+
+  // =========================================================================
+  // 4. APPLICATION STATE
+  // =========================================================================
+  const state = {
+    mode: "story", // "story" | "lab"
+    sceneIdx: 0,
+    sceneTime: 0,
+    storyPlaying: true,
+    speed: 1.0,
+    lastFrameTs: performance.now(),
+
+    // Lab parameters
+    lab: {
+      deltaL: 55,
+      sOffset: 135,
+      dthDeg: 60,
+      phi01: 0,
+      playing: false,
+      dir: 1,
+      layers: {
+        showPara: true,
+        showP1P2: true,
+        showMuArc: true,
+        showColis: true,
+        showVectors: true
+      }
+    },
+
+    // Charts
+    chartMetric: "force", // "force" | "torque"
+    armLength: 1.05,
+    hoverPhi: null,
+
+    // Camera (world coords: center x,y and vertical span in mm)
+    cam: {
+      x: 40,
+      y: -125,
+      span: 360,
+      userOverride: false
+    },
+    drag: { active: false, lastX: 0, lastY: 0 }
+  };
+
+  // =========================================================================
+  // 5. DOM REFERENCES
+  // =========================================================================
+  const el = {
+    btnModeStory: document.getElementById("btnModeStory"),
+    btnModeLab: document.getElementById("btnModeLab"),
+    storyPanel: document.getElementById("storyPanel"),
+    labPanel: document.getElementById("labPanel"),
+    kinCanvas: document.getElementById("kinCanvas"),
+    chartMu: document.getElementById("chartMu"),
+    chartTorque: document.getElementById("chartTorque"),
+    hudDot: document.getElementById("hudDot"),
+    hudStatusText: document.getElementById("hudStatusText"),
+    invalidBanner: document.getElementById("invalidBanner"),
+    btnAutoFit: document.getElementById("btnAutoFit"),
+    btnZoomIn: document.getElementById("btnZoomIn"),
+    btnZoomOut: document.getElementById("btnZoomOut"),
+    sceneBadge: document.getElementById("sceneBadge"),
+    sceneTitle: document.getElementById("sceneTitle"),
+    sceneNarrative: document.getElementById("sceneNarrative"),
+    sceneEquations: document.getElementById("sceneEquations"),
+    scenePills: document.getElementById("scenePills"),
+    btnPrevScene: document.getElementById("btnPrevScene"),
+    btnPlayPause: document.getElementById("btnPlayPause"),
+    btnNextScene: document.getElementById("btnNextScene"),
+    speedSelect: document.getElementById("speedSelect"),
+    // KPIs
+    tagColis: document.getElementById("tagColis"),
+    kpiO2: document.getElementById("kpiO2"),
+    kpiL3: document.getElementById("kpiL3"),
+    tagNorton: document.getElementById("tagNorton"),
+    kpiMuMin: document.getElementById("kpiMuMin"),
+    kpiMuSub: document.getElementById("kpiMuSub"),
+    tagErgo: document.getElementById("tagErgo"),
+    kpiTpico: document.getElementById("kpiTpico"),
+    kpiL60: document.getElementById("kpiL60"),
+    chartMuLive: document.getElementById("chartMuLive"),
+    chartTLive: document.getElementById("chartTLive"),
+    pillMetricForce: document.getElementById("pillMetricForce"),
+    pillMetricTorque: document.getElementById("pillMetricTorque"),
+    armLenSelect: document.getElementById("armLenSelect"),
+    // Lab controls
+    btnLabPlay: document.getElementById("btnLabPlay"),
+    presetsRow: document.getElementById("presetsRow"),
+    sldS: document.getElementById("sldS"),
+    valS: document.getElementById("valS"),
+    sldDeltaL: document.getElementById("sldDeltaL"),
+    valDeltaL: document.getElementById("valDeltaL"),
+    sldPhi: document.getElementById("sldPhi"),
+    valPhi: document.getElementById("valPhi"),
+    dthGroup: document.getElementById("dthGroup"),
+    chkPara: document.getElementById("chkPara"),
+    chkP1P2: document.getElementById("chkP1P2"),
+    chkMuArc: document.getElementById("chkMuArc"),
+    chkColis: document.getElementById("chkColis"),
+    chkVectors: document.getElementById("chkVectors")
+  };
+
+  // Build 7 Scene Pills
+  const pillBars = [];
+  const pillButtons = [];
+  SCENES.forEach((sc, idx) => {
+    const b = document.createElement("button");
+    b.className = "scene-pill" + (idx === 0 ? " active" : "");
+    b.textContent = sc.short;
+    const bar = document.createElement("div");
+    bar.className = "pill-bar";
+    b.appendChild(bar);
+    b.addEventListener("click", () => {
+      goToScene(idx, true);
+    });
+    el.scenePills.appendChild(b);
+    pillButtons.push(b);
+    pillBars.push(bar);
+  });
+
+  // =========================================================================
+  // 6. HIGH-DPI CANVAS HELPERS
+  // =========================================================================
+  function fitCanvas(canvas) {
+    const rect = canvas.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    const w = Math.max(10, Math.round(rect.width * dpr));
+    const h = Math.max(10, Math.round(rect.height * dpr));
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w;
+      canvas.height = h;
+    }
+    const ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { ctx, w: rect.width, h: rect.height };
+  }
+
+  // =========================================================================
+  // 7. KINEMATIC CANVAS RENDERER (3B1B Aesthetic)
+  // =========================================================================
+  function drawArrow(ctx, x1, y1, x2, y2, color, width = 2.2, headSize = 9, dashed = false) {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const len = Math.hypot(dx, dy);
+    if (len < 2) return;
+    const ux = dx / len;
+    const uy = dy / len;
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = width;
+    ctx.lineCap = "round";
+    if (dashed) ctx.setLineDash([5, 4]);
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2 - ux * (headSize * 0.65), y2 - uy * (headSize * 0.65));
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - ux * headSize - uy * (headSize * 0.48), y2 - uy * headSize + ux * (headSize * 0.48));
+    ctx.lineTo(x2 - ux * headSize + uy * (headSize * 0.48), y2 - uy * headSize - ux * (headSize * 0.48));
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawLinkBar(ctx, x1, y1, x2, y2, color, thickness = 7, alpha = 1) {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "rgba(6, 10, 18, 0.7)";
+    ctx.lineWidth = thickness + 3.5;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = thickness;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+
+    // Subtle specular core line
+    ctx.strokeStyle = "rgba(255,255,255,0.28)";
+    ctx.lineWidth = Math.max(1.2, thickness * 0.24);
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawPivot(ctx, x, y, color, radius = 5.5, isGround = false) {
+    ctx.save();
+    if (isGround) {
+      // Ground bracket triangle
+      const h = radius * 2.1;
+      const w = radius * 1.9;
+      ctx.fillStyle = "#1a253d";
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x - w, y + h);
+      ctx.lineTo(x + w, y + h);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      // Hatch lines below
+      ctx.beginPath();
+      for (let i = -2; i <= 2; i++) {
+        const hx = x + i * (w * 0.42);
+        ctx.moveTo(hx, y + h);
+        ctx.lineTo(hx - 4, y + h + 5);
+      }
+      ctx.stroke();
+    }
+    ctx.fillStyle = "#0d1424";
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x, y, radius * 0.38, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawTickMarks(ctx, x1, y1, x2, y2, count, color) {
+    const mx = 0.5 * (x1 + x2);
+    const my = 0.5 * (y1 + y2);
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const len = Math.hypot(dx, dy);
+    if (len < 6) return;
+    const tx = dx / len;
+    const ty = dy / len;
+    const nx = -ty;
+    const ny = tx;
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2.0;
+    const spacing = 4.5;
+    const startOffset = -0.5 * (count - 1) * spacing;
+    for (let i = 0; i < count; i++) {
+      const off = startOffset + i * spacing;
+      const cx = mx + tx * off;
+      const cy = my + ty * off;
+      ctx.beginPath();
+      ctx.moveTo(cx - nx * 6, cy - ny * 6);
+      ctx.lineTo(cx + nx * 6, cy + ny * 6);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function roundRectPath(ctx, x, y, w, h, r) {
+    const rr = Math.min(r, w * 0.5, h * 0.5);
+    ctx.beginPath();
+    ctx.moveTo(x + rr, y);
+    ctx.arcTo(x + w, y, x + w, y + h, rr);
+    ctx.arcTo(x + w, y + h, x, y + h, rr);
+    ctx.arcTo(x, y + h, x, y, rr);
+    ctx.arcTo(x, y, x + w, y, rr);
+    ctx.closePath();
+  }
+
+  function drawLabel(ctx, text, x, y, color = "#eef2f9", align = "left", bg = true, fontSize = 11.5) {
+    ctx.save();
+    ctx.font = `700 ${fontSize}px "JetBrains Mono", monospace`;
+    ctx.textAlign = align;
+    ctx.textBaseline = "middle";
+    if (bg) {
+      const metrics = ctx.measureText(text);
+      const padX = 5;
+      const w = metrics.width + padX * 2;
+      const h = fontSize + 6;
+      let bx = x - padX;
+      if (align === "center") bx = x - w / 2;
+      if (align === "right") bx = x - w + padX;
+      ctx.fillStyle = "rgba(10, 14, 24, 0.82)";
+      ctx.strokeStyle = "rgba(54, 75, 117, 0.55)";
+      ctx.lineWidth = 1;
+      roundRectPath(ctx, bx, y - h / 2, w, h, 4);
+      ctx.fill();
+      ctx.stroke();
+    }
+    ctx.fillStyle = color;
+    ctx.fillText(text, x, y);
+    ctx.restore();
+  }
+
+  function renderKinematicCanvas(frame, res, pose) {
+    const { ctx, w, h } = fitCanvas(el.kinCanvas);
+    ctx.clearRect(0, 0, w, h);
+
+    // Camera transform: world mm -> screen px
+    const scale = h / state.cam.span;
+    const w2s = (wx, wy) => ({
+      x: w * 0.5 + (wx - state.cam.x) * scale,
+      y: h * 0.5 - (wy - state.cam.y) * scale
+    });
+
+    const layers = frame.layers;
+
+    // 1. Blueprint MM Grid
+    const worldLeft = state.cam.x - (w * 0.5) / scale;
+    const worldRight = state.cam.x + (w * 0.5) / scale;
+    const worldBottom = state.cam.y - (h * 0.5) / scale;
+    const worldTop = state.cam.y + (h * 0.5) / scale;
+
+    const stepMinor = 20;
+    const stepMajor = 100;
+
+    ctx.save();
+    ctx.lineWidth = 1;
+    for (let gx = Math.floor(worldLeft / stepMinor) * stepMinor; gx <= worldRight; gx += stepMinor) {
+      const isMajor = Math.round(gx) % stepMajor === 0;
+      const sx = w2s(gx, 0).x;
+      ctx.strokeStyle = isMajor ? "rgba(88, 196, 221, 0.12)" : "rgba(255, 255, 255, 0.035)";
+      ctx.beginPath();
+      ctx.moveTo(sx, 0);
+      ctx.lineTo(sx, h);
+      ctx.stroke();
+    }
+    for (let gy = Math.floor(worldBottom / stepMinor) * stepMinor; gy <= worldTop; gy += stepMinor) {
+      const isMajor = Math.round(gy) % stepMajor === 0;
+      const sy = w2s(0, gy).y;
+      ctx.strokeStyle = isMajor ? "rgba(88, 196, 221, 0.12)" : "rgba(255, 255, 255, 0.035)";
+      ctx.beginPath();
+      ctx.moveTo(0, sy);
+      ctx.lineTo(w, sy);
+      ctx.stroke();
+    }
+
+    // Center axis x=0 and y=0
+    const pOrigin = w2s(0, 0);
+    ctx.strokeStyle = "rgba(147, 166, 200, 0.22)";
+    ctx.setLineDash([6, 5]);
+    ctx.beginPath();
+    ctx.moveTo(pOrigin.x, 0); ctx.lineTo(pOrigin.x, h);
+    ctx.moveTo(0, pOrigin.y); ctx.lineTo(w, pOrigin.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    // 2. Collision Corridor (O2x in [-55, +35])
+    if (layers.showColis) {
+      const c1 = w2s(-55, worldTop);
+      const c2 = w2s(35, worldBottom);
+      ctx.save();
+      ctx.fillStyle = "rgba(255, 107, 107, 0.09)";
+      ctx.fillRect(c1.x, c1.y, c2.x - c1.x, c2.y - c1.y);
+      ctx.strokeStyle = "rgba(255, 107, 107, 0.45)";
+      ctx.setLineDash([5, 5]);
+      ctx.lineWidth = 1.3;
+      ctx.beginPath();
+      ctx.moveTo(c1.x, 0); ctx.lineTo(c1.x, h);
+      ctx.moveTo(c2.x, 0); ctx.lineTo(c2.x, h);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      drawLabel(ctx, "Zona Colisão Guia (-55 ≤ X ≤ +35)", 0.5 * (c1.x + c2.x), 46, "#ff8a8a", "center", true, 10);
+      ctx.restore();
+    }
+
+    // 3. Base Plate, Linear Guide Rails & Breaking Zone Highlight
+    const railTopY = -170;
+    const railBotY = -238;
+    const baseTop = w2s(-46, -242);
+    const baseBot = w2s(46, -254);
+
+    // Breaking Zone Band (y_contato = -213.92 to y_pmi = -223.92)
+    if (layers.highlightBreakZone || true) {
+      const bz1 = w2s(-40, Y_CONTATO);
+      const bz2 = w2s(40, Y_PMI);
+      ctx.save();
+      ctx.fillStyle = "rgba(255, 209, 102, 0.14)";
+      ctx.fillRect(bz1.x, bz1.y, bz2.x - bz1.x, bz2.y - bz1.y);
+      ctx.strokeStyle = "rgba(255, 209, 102, 0.55)";
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(bz1.x, bz1.y); ctx.lineTo(bz2.x, bz1.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      if (layers.highlightBreakZone) {
+        drawLabel(ctx, "Zona Quebra δ_q=10 mm", bz1.x - 6, 0.5 * (bz1.y + bz2.y), "#ffd166", "right", true, 10);
+      }
+      ctx.restore();
+    }
+
+    // Guide rails
+    ctx.save();
+    ctx.fillStyle = "#1c2740";
+    ctx.strokeStyle = "#4b6292";
+    ctx.lineWidth = 1.4;
+    for (const rx of [[-20, -14], [14, 20]]) {
+      const pA = w2s(rx[0], railTopY);
+      const pB = w2s(rx[1], railBotY);
+      ctx.fillRect(pA.x, pA.y, pB.x - pA.x, pB.y - pA.y);
+      ctx.strokeRect(pA.x, pA.y, pB.x - pA.x, pB.y - pA.y);
+    }
+    // Anvil / Base plate
+    ctx.fillStyle = "#202b44";
+    ctx.strokeStyle = "#5c75a8";
+    ctx.fillRect(baseTop.x, baseTop.y, baseBot.x - baseTop.x, baseBot.y - baseTop.y);
+    ctx.strokeRect(baseTop.x, baseTop.y, baseBot.x - baseTop.x, baseBot.y - baseTop.y);
+    ctx.restore();
+
+    // Baru Nut at anvil (y in [-242, -226]), visibly compresses/splits during s_pen > 0
+    const sPen = pose.s_pen || 0;
+    const nutCenter = w2s(0, -234);
+    const nutRx = 11.0 * scale;
+    const nutRy = 7.2 * scale;
+    const splitGap = sPen > 0.25 ? (sPen - 0.25) * 4.5 * scale : 0;
+    ctx.save();
+    // Left half
+    ctx.fillStyle = "#8d4925";
+    ctx.strokeStyle = "#e09f67";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.ellipse(nutCenter.x - splitGap * 0.5, nutCenter.y, nutRx * 0.55, nutRy * (1 - 0.12 * sPen), 0, Math.PI * 0.5, Math.PI * 1.5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    // Right half
+    ctx.beginPath();
+    ctx.ellipse(nutCenter.x + splitGap * 0.5, nutCenter.y, nutRx * 0.55, nutRy * (1 - 0.12 * sPen), 0, -Math.PI * 0.5, Math.PI * 0.5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    if (sPen > 0.05) {
+      // Golden kernel glow when cracking!
+      ctx.fillStyle = `rgba(255, 209, 102, ${0.4 + 0.6 * sPen})`;
+      ctx.beginPath();
+      ctx.ellipse(nutCenter.x, nutCenter.y, Math.max(2, splitGap * 0.55 + 2.5), nutRy * 0.45, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // 4. Invariant Arc of B (B1 <-> B2) and Stroke Bracket
+    const sO4 = w2s(O4.x, O4.y);
+    const sB1 = w2s(B1.x, B1.y);
+    const sB2 = w2s(B2.x, B2.y);
+
+    ctx.save();
+    ctx.strokeStyle = "rgba(92, 214, 141, 0.35)";
+    ctx.setLineDash([4, 4]);
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    // In canvas screen coords (+y down), angles from O4=(0,0) to B1 and B2:
+    const angB1_s = Math.atan2(sB1.y - sO4.y, sB1.x - sO4.x);
+    const angB2_s = Math.atan2(sB2.y - sO4.y, sB2.x - sO4.x);
+    ctx.arc(sO4.x, sO4.y, CONST.L4 * scale, Math.min(angB1_s, angB2_s), Math.max(angB1_s, angB2_s));
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    if (layers.highlightStroke) {
+      const pTop = w2s(-30, Y_PMS);
+      const pBot = w2s(-30, Y_PMI);
+      ctx.save();
+      ctx.strokeStyle = "#5cd68d";
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.moveTo(pTop.x - 5, pTop.y); ctx.lineTo(pTop.x + 12, pTop.y);
+      ctx.moveTo(pBot.x - 5, pBot.y); ctx.lineTo(pBot.x + 12, pBot.y);
+      ctx.moveTo(pTop.x, pTop.y); ctx.lineTo(pBot.x, pBot.y);
+      ctx.stroke();
+      drawLabel(ctx, "h = 30,0 mm", pTop.x - 8, 0.5 * (pTop.y + pBot.y), "#5cd68d", "right", true, 10.5);
+
+      // Draw Delta_theta_4 = 30 deg wedge at O4
+      ctx.strokeStyle = "rgba(92, 214, 141, 0.35)";
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(sO4.x, sO4.y); ctx.lineTo(sB1.x, sB1.y);
+      ctx.moveTo(sO4.x, sO4.y); ctx.lineTo(sB2.x, sB2.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.strokeStyle = "#5cd68d";
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.arc(sO4.x, sO4.y, 34, Math.min(angB1_s, angB2_s), Math.max(angB1_s, angB2_s));
+      ctx.stroke();
+      const midAngleO4 = 0.5 * (angB1_s + angB2_s);
+      drawLabel(ctx, "Δθ₄=30°", sO4.x + 52 * Math.cos(midAngleO4) - 8, sO4.y + 52 * Math.sin(midAngleO4), "#5cd68d", "right", true, 10);
+      ctx.restore();
+    }
+
+    // 5. Geometric Synthesis Constructions: P1, P2, Slide Vectors, Parallelograms, Bisector
+    const sP1 = w2s(res.P1.x, res.P1.y);
+    const sP2 = w2s(res.P2.x, res.P2.y);
+    const sO2 = w2s(res.O2.x, res.O2.y);
+    const sA1 = w2s(res.A1.x, res.A1.y);
+    const sA2 = w2s(res.A2.x, res.A2.y);
+    const sMid = w2s(res.midP.x, res.midP.y);
+
+    // Slide vectors in Scene 3 (-v1 from B1 to P1, -v2 from B2 to P2)
+    if (layers.showSlideVectors !== undefined && layers.showSlideVectors > 0) {
+      const st = layers.showSlideVectors;
+      // Ghost starting vectors at O2 -> A1, O2 -> A2
+      drawArrow(ctx, sO2.x, sO2.y, sA1.x, sA1.y, "rgba(255, 107, 107, 0.85)", 2.4, 8);
+      drawArrow(ctx, sO2.x, sO2.y, sA2.x, sA2.y, "rgba(255, 159, 67, 0.85)", 2.4, 8);
+      // Sliding -v1 starting from B1 -> P1
+      const c1End = w2s(lerp(B1.x, res.P1.x, st), lerp(B1.y, res.P1.y, st));
+      const c2End = w2s(lerp(B2.x, res.P2.x, st), lerp(B2.y, res.P2.y, st));
+      drawArrow(ctx, sB1.x, sB1.y, c1End.x, c1End.y, "#ff6b6b", 2.6, 9);
+      drawArrow(ctx, sB2.x, sB2.y, c2End.x, c2End.y, "#ff9f43", 2.6, 9);
+      if (st > 0.35) {
+        drawLabel(ctx, "−v₁", 0.5 * (sB1.x + c1End.x) - 10, 0.5 * (sB1.y + c1End.y), "#ff6b6b", "right", true, 10.5);
+        drawLabel(ctx, "−v₂", 0.5 * (sB2.x + c2End.x) + 10, 0.5 * (sB2.y + c2End.y), "#ff9f43", "left", true, 10.5);
+      }
+    }
+
+    // Parallelograms O2-A1-B1-P1 and O2-A2-B2-P2
+    const paraAlpha = typeof layers.showPara === "number" ? layers.showPara : (layers.showPara ? 0.85 : 0);
+    if (paraAlpha > 0.02) {
+      ctx.save();
+      // Parallelogram 1 (Blue)
+      ctx.globalAlpha = paraAlpha;
+      ctx.fillStyle = "rgba(88, 196, 221, 0.14)";
+      ctx.strokeStyle = "rgba(88, 196, 221, 0.72)";
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(sO2.x, sO2.y); ctx.lineTo(sA1.x, sA1.y);
+      ctx.lineTo(sB1.x, sB1.y); ctx.lineTo(sP1.x, sP1.y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Parallelogram 2 (Violet)
+      ctx.fillStyle = "rgba(179, 136, 255, 0.14)";
+      ctx.strokeStyle = "rgba(179, 136, 255, 0.72)";
+      ctx.beginPath();
+      ctx.moveTo(sO2.x, sO2.y); ctx.lineTo(sA2.x, sA2.y);
+      ctx.lineTo(sB2.x, sB2.y); ctx.lineTo(sP2.x, sP2.y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Equal-length tick marks proving ||O2P1|| = ||A1B1|| and ||O2P2|| = ||A2B2||
+      if (paraAlpha > 0.45) {
+        drawTickMarks(ctx, sA1.x, sA1.y, sB1.x, sB1.y, 1, "#58c4dd");
+        drawTickMarks(ctx, sO2.x, sO2.y, sP1.x, sP1.y, 1, "#58c4dd");
+        drawTickMarks(ctx, sA2.x, sA2.y, sB2.x, sB2.y, 2, "#b388ff");
+        drawTickMarks(ctx, sO2.x, sO2.y, sP2.x, sP2.y, 2, "#b388ff");
+      }
+      ctx.restore();
+    }
+
+    // P1, P2 & Bisector
+    if (layers.showP1P2 || layers.showBisector) {
+      ctx.save();
+      // Segment P1-P2
+      ctx.strokeStyle = "rgba(88, 196, 221, 0.75)";
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.moveTo(sP1.x, sP1.y);
+      ctx.lineTo(sP2.x, sP2.y);
+      ctx.stroke();
+
+      // Points P1, P2
+      for (const [sp, lbl] of [[sP1, "P₁"], [sP2, "P₂"]]) {
+        ctx.fillStyle = "#58c4dd";
+        ctx.beginPath();
+        ctx.arc(sp.x, sp.y, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+        drawLabel(ctx, lbl, sp.x - 10, sp.y, "#58c4dd", "right", true, 10.5);
+      }
+
+      if (layers.showBisector) {
+        // Long bisector line through midP along nP
+        const bStart = w2s(res.midP.x - 220 * res.nP.x, res.midP.y - 220 * res.nP.y);
+        const bEnd = w2s(res.midP.x + 280 * res.nP.x, res.midP.y + 280 * res.nP.y);
+        ctx.strokeStyle = "rgba(179, 136, 255, 0.78)";
+        ctx.setLineDash([7, 5]);
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.moveTo(bStart.x, bStart.y);
+        ctx.lineTo(bEnd.x, bEnd.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Right-angle square at midP
+        const dPn = Math.hypot(res.dP.x, res.dP.y);
+        if (dPn > 1e-4) {
+          const ux = res.dP.x / dPn, uy = res.dP.y / dPn;
+          const sq = 7.5;
+          const q1 = w2s(res.midP.x + sq * ux, res.midP.y + sq * uy);
+          const q2 = w2s(res.midP.x + sq * ux + sq * res.nP.x, res.midP.y + sq * uy + sq * res.nP.y);
+          const q3 = w2s(res.midP.x + sq * res.nP.x, res.midP.y + sq * res.nP.y);
+          ctx.strokeStyle = "#ffd166";
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(q1.x, q1.y); ctx.lineTo(q2.x, q2.y); ctx.lineTo(q3.x, q3.y);
+          ctx.stroke();
+        }
+
+        // midP dot & n_P vector
+        ctx.fillStyle = "#b388ff";
+        ctx.beginPath();
+        ctx.arc(sMid.x, sMid.y, 3.8, 0, Math.PI * 2);
+        ctx.fill();
+        const sNpTip = w2s(res.midP.x + 38 * res.nP.x, res.midP.y + 38 * res.nP.y);
+        drawArrow(ctx, sMid.x, sMid.y, sNpTip.x, sNpTip.y, "#b388ff", 2.0, 8);
+        drawLabel(ctx, "n_P", sNpTip.x + 6, sNpTip.y - 8, "#b388ff", "left", true, 10.5);
+      }
+
+      // Equal radii O2->P1 and O2->P2
+      if (layers.showEqualRadii || layers.showBisector) {
+        ctx.strokeStyle = "rgba(255, 209, 102, 0.55)";
+        ctx.setLineDash([4, 4]);
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(sO2.x, sO2.y); ctx.lineTo(sP1.x, sP1.y);
+        ctx.moveTo(sO2.x, sO2.y); ctx.lineTo(sP2.x, sP2.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        if (layers.showEqualRadii) {
+          ctx.strokeStyle = "rgba(255, 209, 102, 0.22)";
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.arc(sO2.x, sO2.y, res.L3 * scale, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+    }
+
+    // 6. Ghost extreme poses (Scene 2 / 3)
+    if (layers.showGhostPoses) {
+      const ga = typeof layers.showGhostPoses === "number" ? layers.showGhostPoses : 0.7;
+      ctx.save();
+      ctx.globalAlpha = 0.55 * ga;
+      const Lvis = 165;
+      const thHPms = res.th_pms - res.delta_L * DEG2RAD;
+      const thHPmi = res.th_pmi - res.delta_L * DEG2RAD;
+      const sHPms = w2s(res.O2.x + Lvis * Math.cos(thHPms), res.O2.y + Lvis * Math.sin(thHPms));
+      const sHPmi = w2s(res.O2.x + Lvis * Math.cos(thHPmi), res.O2.y + Lvis * Math.sin(thHPmi));
+
+      ctx.strokeStyle = "#ff6b6b";
+      ctx.setLineDash([5, 4]);
+      ctx.lineWidth = 2.0;
+      ctx.beginPath();
+      ctx.moveTo(sHPms.x, sHPms.y); ctx.lineTo(sO2.x, sO2.y); ctx.lineTo(sA1.x, sA1.y);
+      ctx.stroke();
+
+      ctx.strokeStyle = "#ff9f43";
+      ctx.beginPath();
+      ctx.moveTo(sHPmi.x, sHPmi.y); ctx.lineTo(sO2.x, sO2.y); ctx.lineTo(sA2.x, sA2.y);
+      ctx.stroke();
+
+      if (layers.showTargetLinks) {
+        ctx.strokeStyle = "#58c4dd";
+        ctx.beginPath();
+        ctx.moveTo(sA1.x, sA1.y); ctx.lineTo(sB1.x, sB1.y);
+        ctx.moveTo(sA2.x, sA2.y); ctx.lineTo(sB2.x, sB2.y);
+        ctx.stroke();
+        drawLabel(ctx, "L₃ ?", 0.5 * (sA1.x + sB1.x), 0.5 * (sA1.y + sB1.y) - 10, "#58c4dd", "center", true, 10.5);
+      }
+      ctx.restore();
+    }
+
+    // 7. Live Mechanism Links (L4, L5, Piston, L3, L2 L-Lever)
+    const activeB = pose.B || B1;
+    const activeYp = pose.y_p !== null ? pose.y_p : Y_PMS;
+    const sB = w2s(activeB.x, activeB.y);
+    const sO5 = w2s(0, activeYp);
+    const sA = w2s(pose.A.x, pose.A.y);
+
+    // Piston punch at O5
+    ctx.save();
+    const punchTop = w2s(-11, activeYp + 14);
+    const punchBot = w2s(11, activeYp);
+    const punchTip = w2s(0, activeYp - 7);
+    ctx.fillStyle = "#2b59c3";
+    ctx.strokeStyle = "#8bb4ff";
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(punchTop.x, punchTop.y);
+    ctx.lineTo(punchBot.x, punchTop.y);
+    ctx.lineTo(punchBot.x, punchBot.y);
+    ctx.lineTo(punchTip.x, punchTip.y);
+    ctx.lineTo(punchTop.x, punchBot.y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+
+    // L4 (O4 -> B) and L5 (B -> O5)
+    drawLinkBar(ctx, sO4.x, sO4.y, sB.x, sB.y, "#5cd68d", 6.5);
+    drawLinkBar(ctx, sB.x, sB.y, sO5.x, sO5.y, "#b388ff", 6.0);
+
+    // L3 (A -> B)
+    if (layers.showCoupler !== false && pose.B) {
+      drawLinkBar(ctx, sA.x, sA.y, sB.x, sB.y, "#58c4dd", 6.2);
+    }
+
+    // L2 L-Lever (Handle arm + short arm A + corner gusset + swept sector)
+    if (layers.showLever !== false) {
+      const Lvis = 175;
+      const angHPms = res.th_pms - res.delta_L * DEG2RAD;
+      const angHPmi = res.th_pmi - res.delta_L * DEG2RAD;
+
+      // Swept sector of handle
+      ctx.save();
+      ctx.fillStyle = "rgba(255, 107, 107, 0.08)";
+      ctx.strokeStyle = "rgba(255, 107, 107, 0.35)";
+      ctx.setLineDash([3, 4]);
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(sO2.x, sO2.y);
+      ctx.arc(sO2.x, sO2.y, Lvis * scale, -angHPms, -angHPmi);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+
+      const sH = w2s(res.O2.x + Lvis * Math.cos(pose.thHandle), res.O2.y + Lvis * Math.sin(pose.thHandle));
+      const sH_mid = w2s(res.O2.x + 48 * Math.cos(pose.thHandle), res.O2.y + 48 * Math.sin(pose.thHandle));
+      const sA_mid = w2s(res.O2.x + 42 * Math.cos(pose.th2), res.O2.y + 42 * Math.sin(pose.th2));
+
+      // Gusset plate at L-bend
+      ctx.save();
+      ctx.fillStyle = "rgba(255, 107, 107, 0.24)";
+      ctx.strokeStyle = "rgba(255, 107, 107, 0.6)";
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(sO2.x, sO2.y); ctx.lineTo(sA_mid.x, sA_mid.y); ctx.lineTo(sH_mid.x, sH_mid.y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+
+      drawLinkBar(ctx, sO2.x, sO2.y, sA.x, sA.y, "#ff6b6b", 7.0);
+      drawLinkBar(ctx, sO2.x, sO2.y, sH.x, sH.y, "#ff6b6b", 7.0);
+
+      // Ergonomic grip knob
+      ctx.save();
+      ctx.fillStyle = "#ff6b6b";
+      ctx.strokeStyle = "#fff";
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.arc(sH.x, sH.y, 7.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+
+      // Hand force arrow tangent to clockwise pull
+      if (layers.showVectors) {
+        const fx = Math.sin(pose.thHandle);
+        const fy = -Math.cos(pose.thHandle);
+        const sTip = w2s(res.O2.x + Lvis * Math.cos(pose.thHandle) + 46 * fx,
+                         res.O2.y + Lvis * Math.sin(pose.thHandle) + 46 * fy);
+        drawArrow(ctx, sH.x, sH.y, sTip.x, sTip.y, "#ffd166", 2.4, 9);
+        drawLabel(ctx, "F_mão", sTip.x + 6, sTip.y + 6, "#ffd166", "left", true, 10.5);
+      }
+
+      // Unknown O2 halo in Scene 2
+      if (layers.showUnknownO2) {
+        ctx.save();
+        ctx.strokeStyle = "#ffd166";
+        ctx.setLineDash([4, 4]);
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.arc(sO2.x, sO2.y, 18, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+        drawLabel(ctx, "O₂ = ?", sO2.x + 22, sO2.y - 16, "#ffd166", "left", true, 11);
+      } else {
+        drawLabel(ctx, `O₂`, sO2.x + 12, sO2.y + 18, "#ff8a8a", "left", true, 11);
+      }
+
+      drawPivot(ctx, sO2.x, sO2.y, "#ff6b6b", 6, true);
+      drawPivot(ctx, sA.x, sA.y, "#58c4dd", 5.2, false);
+      drawLabel(ctx, "A", sA.x + 10, sA.y - 8, "#58c4dd", "left", true, 10.5);
+    }
+
+    // 8. Transmission Angle Arc mu(phi) right at Joint B
+    if (layers.showMuArc && pose.B && layers.showCoupler !== false) {
+      const aBA = Math.atan2(sA.y - sB.y, sA.x - sB.x);
+      const aBO4 = Math.atan2(sO4.y - sB.y, sO4.x - sB.x);
+      let diff = aBO4 - aBA;
+      while (diff > Math.PI) diff -= 2 * Math.PI;
+      while (diff < -Math.PI) diff += 2 * Math.PI;
+      const isOk = pose.mu_deg >= 40 && pose.mu_deg <= 140;
+      const arcCol = isOk ? "#5cd68d" : "#ff6b6b";
+      const rArc = 26;
+      ctx.save();
+      ctx.fillStyle = isOk ? "rgba(92, 214, 141, 0.22)" : "rgba(255, 107, 107, 0.28)";
+      ctx.strokeStyle = arcCol;
+      ctx.lineWidth = 2.0;
+      ctx.beginPath();
+      ctx.moveTo(sB.x, sB.y);
+      ctx.arc(sB.x, sB.y, rArc, aBA, aBA + diff, diff < 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(sB.x, sB.y, rArc, aBA, aBA + diff, diff < 0);
+      ctx.stroke();
+
+      const midA = aBA + 0.5 * diff;
+      drawLabel(ctx, `μ=${pose.mu_deg.toFixed(1)}°`, sB.x + (rArc + 18) * Math.cos(midA), sB.y + (rArc + 18) * Math.sin(midA), arcCol, "center", true, 10.5);
+      ctx.restore();
+    }
+
+    // 9. Velocity / Force Vector at Piston O5
+    if (layers.showVectors && pose.hp_m !== undefined) {
+      const vLen = Math.min(48, Math.max(4, pose.hp_m * 1000 * 1.15));
+      if (vLen > 5) {
+        drawArrow(ctx, sO5.x - 18, sO5.y, sO5.x - 18, sO5.y + vLen, "#58c4dd", 2.0, 7);
+        drawLabel(ctx, `|dy/dφ|=${(pose.hp_m * 1000).toFixed(1)}`, sO5.x - 24, sO5.y + vLen * 0.5, "#58c4dd", "right", true, 9.8);
+      }
+      if (sPen > 0.02) {
+        const fN = 5000 * Math.pow(sPen, 0.4);
+        drawArrow(ctx, sO5.x + 18, sO5.y - 12, sO5.x + 18, sO5.y + 16, "#ffd166", 2.4, 8);
+        drawLabel(ctx, `F=${(fN / 1000).toFixed(2)}kN`, sO5.x + 24, sO5.y + 2, "#ffd166", "left", true, 9.8);
+      }
+    }
+
+    // Final joints O4, B, O5 on top
+    drawPivot(ctx, sO4.x, sO4.y, "#5cd68d", 6, true);
+    drawPivot(ctx, sB.x, sB.y, "#ffd166", 5.4, false);
+    drawPivot(ctx, sO5.x, sO5.y, "#b388ff", 5.0, false);
+
+    drawLabel(ctx, "O₄", sO4.x - 12, sO4.y - 10, "#5cd68d", "right", true, 10.5);
+    drawLabel(ctx, "B", sB.x - 10, sB.y + 12, "#ffd166", "right", true, 10.5);
+    drawLabel(ctx, "O₅", sO5.x + 16, sO5.y - 4, "#b388ff", "left", true, 10.5);
+
+    // B1 and B2 reference markers
+    if (layers.coreOnly || layers.showGhostPoses || layers.showTargetLinks) {
+      ctx.save();
+      ctx.fillStyle = "rgba(92, 214, 141, 0.7)";
+      ctx.beginPath(); ctx.arc(sB1.x, sB1.y, 3.5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(sB2.x, sB2.y, 3.5, 0, Math.PI * 2); ctx.fill();
+      drawLabel(ctx, "B₁(PMS)", sB1.x - 10, sB1.y - 10, "#8ce9ad", "right", true, 9.8);
+      drawLabel(ctx, "B₂(PMI)", sB2.x + 10, sB2.y + 12, "#8ce9ad", "left", true, 9.8);
+      ctx.restore();
+    }
+  }
+
+  // =========================================================================
+  // 8. SYNCHRONIZED DUAL CHARTS (mu(phi) and T/F_mao(phi))
+  // =========================================================================
+  function renderChartMu(res, pose, frame) {
+    const { ctx, w, h } = fitCanvas(el.chartMu);
+    ctx.clearRect(0, 0, w, h);
+
+    const pad = { l: 38, r: 12, t: 10, b: 22 };
+    const pw = w - pad.l - pad.r;
+    const ph = h - pad.t - pad.b;
+
+    const xOf = (pNorm) => pad.l + (pNorm / 100.0) * pw;
+    const yOf = (deg) => pad.t + ph - ((deg - 0) / 150.0) * ph;
+
+    // Norton Safe Band [40, 140]
+    ctx.fillStyle = "rgba(92, 214, 141, 0.11)";
+    ctx.fillRect(pad.l, yOf(140), pw, yOf(40) - yOf(140));
+
+    // Breaking Zone Band
+    if (res.valid) {
+      const qx = xOf(res.phi_q_norm);
+      ctx.fillStyle = "rgba(255, 209, 102, 0.12)";
+      ctx.fillRect(qx, pad.t, pad.l + pw - qx, ph);
+    }
+
+    // Grid & Axes
+    ctx.strokeStyle = "rgba(255,255,255,0.07)";
+    ctx.lineWidth = 1;
+    ctx.font = `600 9.8px "JetBrains Mono", monospace`;
+    ctx.fillStyle = "#8fa3c7";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+    for (const yv of [0, 40, 90, 140]) {
+      const yy = yOf(yv);
+      ctx.beginPath();
+      if (yv === 40 || yv === 140) {
+        ctx.strokeStyle = "rgba(92, 214, 141, 0.45)";
+        ctx.setLineDash([4, 4]);
+      } else {
+        ctx.strokeStyle = "rgba(255,255,255,0.07)";
+        ctx.setLineDash([]);
+      }
+      ctx.moveTo(pad.l, yy);
+      ctx.lineTo(pad.l + pw, yy);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillText(`${yv}°`, pad.l - 5, yy);
+    }
+
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    for (const xv of [0, 25, 50, 75, 100]) {
+      const xx = xOf(xv);
+      ctx.strokeStyle = "rgba(255,255,255,0.06)";
+      ctx.beginPath(); ctx.moveTo(xx, pad.t); ctx.lineTo(xx, pad.t + ph); ctx.stroke();
+      ctx.fillText(`${xv}%`, xx, pad.t + ph + 4);
+    }
+
+    // Comparison overlay in Scene 5
+    if (frame.compareMu) {
+      const cols = { C1: "rgba(88, 196, 221, 0.55)", C4: "rgba(92, 214, 141, 0.65)", C9: "rgba(255, 107, 107, 0.6)" };
+      for (const cid of frame.compareMu) {
+        const cr = CACHE_REF[cid];
+        ctx.save();
+        ctx.strokeStyle = cols[cid];
+        ctx.lineWidth = 1.6;
+        ctx.setLineDash([4, 3]);
+        ctx.beginPath();
+        for (let k = 0; k < cr.N; k += 2) {
+          const xx = xOf(cr.phi_norm[k]);
+          const yy = yOf(cr.mu_deg[k]);
+          k === 0 ? ctx.moveTo(xx, yy) : ctx.lineTo(xx, yy);
+        }
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    if (!res.valid) {
+      ctx.fillStyle = "#ff8a8a";
+      ctx.font = `700 11.5px "Inter", sans-serif`;
+      ctx.textAlign = "center";
+      ctx.fillText("Configuração Inválida — Sem curva μ(φ)", pad.l + pw * 0.5, pad.t + ph * 0.5);
+      el.chartMuLive.textContent = "Inválido";
+      return;
+    }
+
+    // Main curve
+    ctx.save();
+    ctx.strokeStyle = res.mu_min >= 40 && res.mu_max <= 140 ? "#5cd68d" : "#ff6b6b";
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    for (let k = 0; k < res.N; k += 2) {
+      const xx = xOf(res.phi_norm[k]);
+      const yy = yOf(res.mu_deg[k]);
+      k === 0 ? ctx.moveTo(xx, yy) : ctx.lineTo(xx, yy);
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    // Active playhead or hover
+    const curNorm = state.hoverPhi !== null ? state.hoverPhi : pose.u * 100.0;
+    const curPose = state.hoverPhi !== null ? samplePoseAt(res, state.hoverPhi / 100.0) : pose;
+    const cx = xOf(curNorm);
+    const cy = yOf(curPose.mu_deg);
+
+    ctx.strokeStyle = "rgba(255, 209, 102, 0.7)";
+    ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(cx, pad.t); ctx.lineTo(cx, pad.t + ph); ctx.stroke();
+
+    ctx.fillStyle = "#ffd166";
+    ctx.beginPath(); ctx.arc(cx, cy, 4.5, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#0a0e17"; ctx.lineWidth = 1.5; ctx.stroke();
+
+    el.chartMuLive.textContent = `φ = ${curNorm.toFixed(1)}% • μ = ${curPose.mu_deg.toFixed(1)}°`;
+  }
+
+  function renderChartTorque(res, pose, frame) {
+    const { ctx, w, h } = fitCanvas(el.chartTorque);
+    ctx.clearRect(0, 0, w, h);
+
+    const pad = { l: 44, r: 12, t: 10, b: 22 };
+    const pw = w - pad.l - pad.r;
+    const ph = h - pad.t - pad.b;
+
+    const isForce = state.chartMetric === "force";
+    const scaleF = isForce ? (1.0 / state.armLength) : 1.0;
+
+    let yMax = isForce ? 140 : 140;
+    if (res.valid) {
+      const peak = Math.max(res.T_bio_pico, res.T_lin_pico) * scaleF;
+      yMax = Math.max(isForce ? 85 : 90, Math.ceil(peak * 1.15 / 20) * 20);
+      yMax = Math.min(yMax, isForce ? 360 : 280);
+    }
+
+    const xOf = (pNorm) => pad.l + (pNorm / 100.0) * pw;
+    const yOf = (val) => pad.t + ph - (Math.min(yMax, val) / yMax) * ph;
+
+    // Breaking zone
+    if (res.valid) {
+      const qx = xOf(res.phi_q_norm);
+      ctx.fillStyle = "rgba(255, 209, 102, 0.12)";
+      ctx.fillRect(qx, pad.t, pad.l + pw - qx, ph);
+    }
+
+    // Target 60 N line (or T = 60 * L in Torque mode)
+    const targetVal = isForce ? 60.0 : (60.0 * state.armLength);
+    if (targetVal < yMax) {
+      const ty = yOf(targetVal);
+      ctx.save();
+      ctx.strokeStyle = "rgba(92, 214, 141, 0.7)";
+      ctx.setLineDash([5, 4]);
+      ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.moveTo(pad.l, ty); ctx.lineTo(pad.l + pw, ty); ctx.stroke();
+      ctx.fillStyle = "#5cd68d";
+      ctx.font = `700 9.5px "JetBrains Mono", monospace`;
+      ctx.textAlign = "left";
+      ctx.textBaseline = "bottom";
+      ctx.fillText(isForce ? "Meta 60 N" : `Meta 60N·(${state.armLength.toFixed(2)}m)=${targetVal.toFixed(0)} N·m`, pad.l + 4, ty - 2);
+      ctx.restore();
+    }
+
+    // Grid
+    ctx.font = `600 9.8px "JetBrains Mono", monospace`;
+    ctx.fillStyle = "#8fa3c7";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+    const stepY = yMax <= 120 ? 30 : (yMax <= 200 ? 50 : 75);
+    for (let yv = 0; yv <= yMax; yv += stepY) {
+      const yy = yOf(yv);
+      ctx.strokeStyle = "rgba(255,255,255,0.07)";
+      ctx.beginPath(); ctx.moveTo(pad.l, yy); ctx.lineTo(pad.l + pw, yy); ctx.stroke();
+      ctx.fillText(`${yv}`, pad.l - 5, yy);
+    }
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    for (const xv of [0, 25, 50, 75, 100]) {
+      const xx = xOf(xv);
+      ctx.strokeStyle = "rgba(255,255,255,0.06)";
+      ctx.beginPath(); ctx.moveTo(xx, pad.t); ctx.lineTo(xx, pad.t + ph); ctx.stroke();
+      ctx.fillText(`${xv}%`, xx, pad.t + ph + 4);
+    }
+
+    // Comparison ghost C1 in Scene 7
+    if (frame.compareTorque && frame.compareTorque.includes("C1")) {
+      const cr = CACHE_REF.C1;
+      ctx.save();
+      ctx.strokeStyle = "rgba(147, 166, 200, 0.45)";
+      ctx.setLineDash([4, 3]);
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      for (let k = 0; k < cr.N; k += 2) {
+        const xx = xOf(cr.phi_norm[k]);
+        const yy = yOf(cr.T_lin[k] * scaleF);
+        k === 0 ? ctx.moveTo(xx, yy) : ctx.lineTo(xx, yy);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    if (!res.valid) {
+      ctx.fillStyle = "#ff8a8a";
+      ctx.font = `700 11.5px "Inter", sans-serif`;
+      ctx.textAlign = "center";
+      ctx.fillText("Configuração Inválida", pad.l + pw * 0.5, pad.t + ph * 0.5);
+      el.chartTLive.textContent = "—";
+      return;
+    }
+
+    // Bio s^0.4 curve (coral/orange)
+    ctx.save();
+    ctx.strokeStyle = "#ff7b72";
+    ctx.lineWidth = 2.1;
+    ctx.setLineDash([5, 3]);
+    ctx.beginPath();
+    for (let k = 0; k < res.N; k += 2) {
+      const xx = xOf(res.phi_norm[k]);
+      const yy = yOf(res.T_bio[k] * scaleF);
+      k === 0 ? ctx.moveTo(xx, yy) : ctx.lineTo(xx, yy);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Linear curve (blue)
+    ctx.strokeStyle = "#58c4dd";
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    for (let k = 0; k < res.N; k += 2) {
+      const xx = xOf(res.phi_norm[k]);
+      const yy = yOf(res.T_lin[k] * scaleF);
+      k === 0 ? ctx.moveTo(xx, yy) : ctx.lineTo(xx, yy);
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    // Legend top-left
+    ctx.save();
+    ctx.font = `600 9.5px "Inter", sans-serif`;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#58c4dd";
+    ctx.fillText("━━ Linear", pad.l + 6, pad.t + 8);
+    ctx.fillStyle = "#ff7b72";
+    ctx.fillText("┄┄ Bio s⁰·⁴", pad.l + 66, pad.t + 8);
+    if (frame.compareTorque) {
+      ctx.fillStyle = "#93a6c8";
+      ctx.fillText("┄ C1 (60°)", pad.l + 132, pad.t + 8);
+    }
+    ctx.restore();
+
+    // Active playhead or hover
+    const curNorm = state.hoverPhi !== null ? state.hoverPhi : pose.u * 100.0;
+    const curPose = state.hoverPhi !== null ? samplePoseAt(res, state.hoverPhi / 100.0) : pose;
+    const cx = xOf(curNorm);
+    const vLin = curPose.T_lin * scaleF;
+    const vBio = curPose.T_bio * scaleF;
+
+    ctx.strokeStyle = "rgba(255, 209, 102, 0.65)";
+    ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(cx, pad.t); ctx.lineTo(cx, pad.t + ph); ctx.stroke();
+
+    for (const [val, col] of [[vLin, "#58c4dd"], [vBio, "#ff7b72"]]) {
+      ctx.fillStyle = col;
+      ctx.beginPath(); ctx.arc(cx, yOf(val), 4.0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "#0a0e17"; ctx.lineWidth = 1.3; ctx.stroke();
+    }
+
+    const unit = isForce ? "N" : "N·m";
+    el.chartTLive.textContent = `Lin: ${vLin.toFixed(1)} ${unit} | Bio: ${vBio.toFixed(1)} ${unit}`;
+  }
+
+  // =========================================================================
+  // 9. UI SYNC & MODE MANAGEMENT
+  // =========================================================================
+  function updateTelemetry(res, frame) {
+    el.kpiO2.textContent = `[${res.O2.x.toFixed(1)}, ${res.O2.y.toFixed(1)}] mm`;
+    el.kpiL3.textContent = `L₃ = ${res.L3.toFixed(2)} mm • d = ${res.d_base.toFixed(1)} mm`;
+
+    if (res.livre_colis) {
+      el.tagColis.textContent = "SEM COLISÃO";
+      el.tagColis.className = "tag tag-ok";
+    } else {
+      el.tagColis.textContent = "COLISÃO GUIA";
+      el.tagColis.className = "tag tag-bad";
+    }
+
+    if (!res.valid) {
+      el.invalidBanner.textContent = `⚠ Configuração inválida: ${res.reason}`;
+      el.invalidBanner.classList.add("visible");
+      el.hudDot.className = "dot-live dot-err";
+      el.tagNorton.textContent = "INVÁLIDO";
+      el.tagNorton.className = "tag tag-bad";
+      el.kpiMuMin.textContent = "μ_min = —";
+      el.kpiMuSub.textContent = res.reason;
+      el.kpiTpico.textContent = "—";
+      el.kpiL60.textContent = "—";
+      return;
+    }
+
+    el.invalidBanner.classList.remove("visible");
+
+    const nortonOk = res.mu_min >= 40.0 && res.mu_max <= 140.0;
+    if (!nortonOk) {
+      el.tagNorton.textContent = "VIOLA NORTON";
+      el.tagNorton.className = "tag tag-bad";
+      el.hudDot.className = "dot-live dot-err";
+    } else if (!res.livre_colis) {
+      el.tagNorton.textContent = "NORTON OK";
+      el.tagNorton.className = "tag tag-ok";
+      el.hudDot.className = "dot-live dot-warn";
+    } else {
+      el.tagNorton.textContent = "NORTON OK";
+      el.tagNorton.className = "tag tag-ok";
+      el.hudDot.className = "dot-live";
+    }
+
+    el.kpiMuMin.textContent = `μ_min = ${res.mu_min.toFixed(1)}°`;
+    el.kpiMuSub.textContent = `μ_q,med = ${res.mu_q_mean.toFixed(1)}° • μ_PMI = ${res.mu_pmi.toFixed(1)}°`;
+
+    el.kpiTpico.textContent = `${res.T_lin_pico.toFixed(2)} / ${res.T_bio_pico.toFixed(2)} N·m`;
+    el.kpiL60.textContent = `L₆₀(lin/bio): ${res.L60_lin.toFixed(2)} / ${res.L60_bio.toFixed(2)} m`;
+
+    const fAt105 = res.F_1050_lin;
+    el.tagErgo.textContent = `F@1.05m: ${fAt105.toFixed(1)} N`;
+    el.tagErgo.className = fAt105 <= 60.0 ? "tag tag-ok" : "tag tag-warn";
+
+    el.hudStatusText.textContent = `${frame.activeName} • δ_L=${res.delta_L.toFixed(0)}° • s=${res.s_offset.toFixed(0)} mm • Δθ=${res.dth_deg}°`;
+  }
+
+  function setMode(mode) {
+    state.mode = mode;
+    const isStory = mode === "story";
+    el.btnModeStory.classList.toggle("active", isStory);
+    el.btnModeLab.classList.toggle("active", !isStory);
+    el.storyPanel.classList.toggle("hidden", !isStory);
+    state.cam.userOverride = false;
+    if (!isStory) {
+      syncLabSlidersFromState();
+    }
+  }
+
+  function goToScene(idx, autoplay = false) {
+    state.sceneIdx = (idx + SCENES.length) % SCENES.length;
+    state.sceneTime = 0;
+    if (autoplay) state.storyPlaying = true;
+    state.cam.userOverride = false;
+    updateStoryHeaderUI();
+  }
+
+  function updateStoryHeaderUI() {
+    const sc = SCENES[state.sceneIdx];
+    el.sceneBadge.textContent = `CENA ${state.sceneIdx + 1} / ${SCENES.length}`;
+    el.sceneTitle.textContent = sc.title;
+    el.sceneNarrative.innerHTML = sc.narrative;
+    el.sceneEquations.innerHTML = sc.equations;
+    el.btnPlayPause.textContent = state.storyPlaying ? "⏸ Pausar" : "▶ Reproduzir";
+    pillButtons.forEach((b, i) => {
+      b.classList.toggle("active", i === state.sceneIdx);
+      if (i < state.sceneIdx) pillBars[i].style.width = "100%";
+      else if (i > state.sceneIdx) pillBars[i].style.width = "0%";
+    });
+  }
+
+  function syncLabSlidersFromState() {
+    el.sldS.value = state.lab.sOffset;
+    el.valS.textContent = `${state.lab.sOffset} mm`;
+    el.sldDeltaL.value = state.lab.deltaL;
+    el.valDeltaL.textContent = `${state.lab.deltaL}° (γ=${180 - state.lab.deltaL}°)`;
+    const phiPct = state.lab.phi01 * 100;
+    el.sldPhi.value = phiPct;
+    el.valPhi.textContent = `${phiPct.toFixed(1)}% (${(state.lab.phi01 * state.lab.dthDeg).toFixed(1)}°)`;
+    el.dthGroup.querySelectorAll(".seg-btn").forEach((b) => {
+      b.classList.toggle("active", Number(b.dataset.dth) === state.lab.dthDeg);
+    });
+  }
+
+  function applyPreset(key) {
+    const p = PRESETS[key];
+    if (!p) return;
+    if (state.mode === "story") setMode("lab");
+    state.lab.deltaL = p.deltaL;
+    state.lab.sOffset = p.s;
+    state.lab.dthDeg = p.dth;
+    state.cam.userOverride = false;
+    syncLabSlidersFromState();
+    el.presetsRow.querySelectorAll(".preset-btn").forEach((b) => {
+      b.classList.toggle("active", b.dataset.preset === key);
+    });
+  }
+
+  function autoFitCamera(res) {
+    const hMax = res.th_pms - res.delta_L * DEG2RAD;
+    const hMin = res.th_pmi - res.delta_L * DEG2RAD;
+    const pts = [
+      O4, B1, B2, res.O2, res.P1, res.P2, res.A1, res.A2,
+      { x: 0, y: Y_PMI },
+      { x: res.O2.x + 175 * Math.cos(hMax), y: res.O2.y + 175 * Math.sin(hMax) },
+      { x: res.O2.x + 175 * Math.cos(hMin), y: res.O2.y + 175 * Math.sin(hMin) }
+    ];
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    for (const p of pts) {
+      if (p.x < minX) minX = p.x;
+      if (p.x > maxX) maxX = p.x;
+      if (p.y < minY) minY = p.y;
+      if (p.y > maxY) maxY = p.y;
+    }
+    const cx = 0.5 * (minX + maxX);
+    const cy = 0.5 * (minY + maxY);
+    const spanY = Math.max(310, (maxY - minY) + 90);
+    return { x: cx, y: cy, span: spanY };
+  }
+
+  // =========================================================================
+  // 10. EVENT LISTENERS
+  // =========================================================================
+  el.btnModeStory.addEventListener("click", () => setMode("story"));
+  el.btnModeLab.addEventListener("click", () => setMode("lab"));
+
+  el.btnPrevScene.addEventListener("click", () => goToScene(state.sceneIdx - 1));
+  el.btnNextScene.addEventListener("click", () => goToScene(state.sceneIdx + 1));
+  el.btnPlayPause.addEventListener("click", () => {
+    state.storyPlaying = !state.storyPlaying;
+    updateStoryHeaderUI();
+  });
+  el.speedSelect.addEventListener("change", (e) => {
+    state.speed = parseFloat(e.target.value) || 1.0;
+  });
+
+  // Lab controls switch to Lab mode smoothly if adjusted
+  const ensureLabMode = () => {
+    if (state.mode !== "lab") setMode("lab");
+    el.presetsRow.querySelectorAll(".preset-btn").forEach((b) => b.classList.remove("active"));
+  };
+
+  el.sldS.addEventListener("input", (e) => {
+    ensureLabMode();
+    state.lab.sOffset = Number(e.target.value);
+    syncLabSlidersFromState();
+  });
+  el.sldDeltaL.addEventListener("input", (e) => {
+    ensureLabMode();
+    state.lab.deltaL = Number(e.target.value);
+    syncLabSlidersFromState();
+  });
+  el.sldPhi.addEventListener("input", (e) => {
+    ensureLabMode();
+    state.lab.playing = false;
+    el.btnLabPlay.textContent = "▶ Animar Ciclo";
+    state.lab.phi01 = Number(e.target.value) / 100.0;
+    syncLabSlidersFromState();
+  });
+
+  el.dthGroup.querySelectorAll(".seg-btn").forEach((b) => {
+    b.addEventListener("click", () => {
+      ensureLabMode();
+      state.lab.dthDeg = Number(b.dataset.dth);
+      syncLabSlidersFromState();
+    });
+  });
+
+  el.presetsRow.querySelectorAll(".preset-btn").forEach((b) => {
+    b.addEventListener("click", () => applyPreset(b.dataset.preset));
+  });
+
+  el.btnLabPlay.addEventListener("click", () => {
+    if (state.mode !== "lab") setMode("lab");
+    state.lab.playing = !state.lab.playing;
+    el.btnLabPlay.textContent = state.lab.playing ? "⏸ Pausar Ciclo" : "▶ Animar Ciclo";
+  });
+
+  for (const [chk, key] of [
+    [el.chkPara, "showPara"],
+    [el.chkP1P2, "showP1P2"],
+    [el.chkMuArc, "showMuArc"],
+    [el.chkColis, "showColis"],
+    [el.chkVectors, "showVectors"]
+  ]) {
+    chk.addEventListener("change", () => {
+      state.lab.layers[key] = chk.checked;
+      if (state.mode !== "lab") setMode("lab");
+    });
+  }
+
+  el.pillMetricForce.addEventListener("click", () => {
+    state.chartMetric = "force";
+    el.pillMetricForce.classList.add("active");
+    el.pillMetricTorque.classList.remove("active");
+  });
+  el.pillMetricTorque.addEventListener("click", () => {
+    state.chartMetric = "torque";
+    el.pillMetricTorque.classList.add("active");
+    el.pillMetricForce.classList.remove("active");
+  });
+  el.armLenSelect.addEventListener("change", (e) => {
+    state.armLength = parseFloat(e.target.value) || 1.05;
+  });
+
+  // Camera Pan & Zoom
+  el.btnAutoFit.addEventListener("click", () => { state.cam.userOverride = false; });
+  el.btnZoomIn.addEventListener("click", () => {
+    state.cam.userOverride = true;
+    state.cam.span = Math.max(140, state.cam.span * 0.82);
+  });
+  el.btnZoomOut.addEventListener("click", () => {
+    state.cam.userOverride = true;
+    state.cam.span = Math.min(720, state.cam.span * 1.22);
+  });
+
+  el.kinCanvas.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    state.cam.userOverride = true;
+    const factor = e.deltaY > 0 ? 1.1 : 0.9;
+    state.cam.span = Math.max(140, Math.min(760, state.cam.span * factor));
+  }, { passive: false });
+
+  el.kinCanvas.addEventListener("pointerdown", (e) => {
+    state.drag.active = true;
+    state.drag.lastX = e.clientX;
+    state.drag.lastY = e.clientY;
+    el.kinCanvas.setPointerCapture(e.pointerId);
+  });
+  el.kinCanvas.addEventListener("pointermove", (e) => {
+    if (!state.drag.active) return;
+    state.cam.userOverride = true;
+    const rect = el.kinCanvas.getBoundingClientRect();
+    const scale = rect.height / state.cam.span;
+    const dx = e.clientX - state.drag.lastX;
+    const dy = e.clientY - state.drag.lastY;
+    state.cam.x -= dx / scale;
+    state.cam.y += dy / scale;
+    state.drag.lastX = e.clientX;
+    state.drag.lastY = e.clientY;
+  });
+  el.kinCanvas.addEventListener("pointerup", () => { state.drag.active = false; });
+
+  // Chart hover inspection
+  for (const [cvs, padL, padR] of [[el.chartMu, 38, 12], [el.chartTorque, 44, 12]]) {
+    cvs.addEventListener("mousemove", (e) => {
+      const rect = cvs.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const pw = rect.width - padL - padR;
+      const norm = clamp01((x - padL) / pw) * 100.0;
+      state.hoverPhi = norm;
+    });
+    cvs.addEventListener("mouseleave", () => { state.hoverPhi = null; });
+  }
+
+  // Keyboard shortcuts
+  window.addEventListener("keydown", (e) => {
+    if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+    if (state.mode === "story") {
+      if (e.code === "Space") {
+        e.preventDefault();
+        state.storyPlaying = !state.storyPlaying;
+        updateStoryHeaderUI();
+      } else if (e.code === "ArrowRight") {
+        goToScene(state.sceneIdx + 1);
+      } else if (e.code === "ArrowLeft") {
+        goToScene(state.sceneIdx - 1);
+      }
+    }
+  });
+
+  // =========================================================================
+  // 11. MAIN ANIMATION LOOP
+  // =========================================================================
+  function tick(now) {
+    const dt = Math.min(0.05, Math.max(0.001, (now - state.lastFrameTs) / 1000.0));
+    state.lastFrameTs = now;
+
+    let frame;
+    if (state.mode === "story") {
+      const sc = SCENES[state.sceneIdx];
+      if (state.storyPlaying) {
+        state.sceneTime += dt * state.speed;
+        if (state.sceneTime >= sc.duration) {
+          goToScene(state.sceneIdx + 1, true);
+        }
+      }
+      const activeSc = SCENES[state.sceneIdx];
+      const t = clamp01(state.sceneTime / activeSc.duration);
+      pillBars[state.sceneIdx].style.width = `${(t * 100).toFixed(1)}%`;
+      frame = activeSc.evaluate(t);
+    } else {
+      if (state.lab.playing) {
+        state.lab.phi01 += dt * 0.38 * state.lab.dir;
+        if (state.lab.phi01 >= 1) { state.lab.phi01 = 1; state.lab.dir = -1; }
+        if (state.lab.phi01 <= 0) { state.lab.phi01 = 0; state.lab.dir = 1; }
+        syncLabSlidersFromState();
+      }
+      frame = {
+        deltaL: state.lab.deltaL,
+        sOffset: state.lab.sOffset,
+        dthDeg: state.lab.dthDeg,
+        phi01: state.lab.phi01,
+        activeName: "Modo Laboratório",
+        camera: null,
+        layers: {
+          coreOnly: false,
+          showLever: true,
+          showCoupler: true,
+          showPara: state.lab.layers.showPara ? 0.65 : 0,
+          showP1P2: state.lab.layers.showP1P2,
+          showBisector: state.lab.layers.showP1P2,
+          showMuArc: state.lab.layers.showMuArc,
+          showColis: state.lab.layers.showColis,
+          showVectors: state.lab.layers.showVectors,
+          highlightBreakZone: true
+        }
+      };
+    }
+
+    const res = avaliarConfig(CONST.L2, frame.deltaL, frame.sOffset, frame.dthDeg);
+    const pose = samplePoseAt(res, frame.phi01);
+
+    // Smooth camera lerp
+    if (!state.cam.userOverride) {
+      const targetCam = frame.camera || autoFitCamera(res);
+      const camLerp = 1 - Math.exp(-6.0 * dt);
+      state.cam.x = lerp(state.cam.x, targetCam.x, camLerp);
+      state.cam.y = lerp(state.cam.y, targetCam.y, camLerp);
+      state.cam.span = lerp(state.cam.span, targetCam.span, camLerp);
+    }
+
+    updateTelemetry(res, frame);
+    renderKinematicCanvas(frame, res, pose);
+    renderChartMu(res, pose, frame);
+    renderChartTorque(res, pose, frame);
+
+    requestAnimationFrame(tick);
+  }
+
+  // Expose pure math kernel for automated verification tests if needed
+  window.__BARU_SYNTH__ = { CONST, avaliarConfig, samplePoseAt, PRESETS, SCENES };
+
+  updateStoryHeaderUI();
+  syncLabSlidersFromState();
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
