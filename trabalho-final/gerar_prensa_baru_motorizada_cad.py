@@ -91,24 +91,32 @@ Z_BASE_BOT = Z_WORK_DATUM + 2.00                    # 982.00 mm
 Z_BASE_TOP = Z_WORK_DATUM + 8.35                    # 988.35 mm (Chapa 1/4" = 6.35 mm)
 Z_STRUCT_BOT = Z_WORK_DATUM + 8.37                  # 988.37 mm
 
-# Suporte do Baru em Cantoneira comercial 1.1/2" x 3/16" a 45° (V 90°)
-Z_CANTONEIRA_V = Z_WORK_DATUM + 17.25               # 997.25 mm
+# Suporte do Baru em Cantoneira comercial 1.1/2" x 3/16" a 45° (V 90°) — elevado +6,00 mm
+Z_CANTONEIRA_V = Z_WORK_DATUM + 23.25               # 1003.25 mm (+6.00 mm sobre 997.25 mm)
 
-# Corpo de prova: Baru elipsoidal 50.0 (X) x 30.0 (Y) x 40.0 (Z) mm na Cantoneira 90°
+# Corpo de prova na orientação natural deitada: 50.0 (X) x 40.0 (Y) x 30.0 (Z) mm na Cantoneira 90°
 BARU_LEN_X = 50.00
-BARU_WID_Y = 30.00
-BARU_DEP_Z = 40.00
+BARU_WID_Y = 40.00
+BARU_DEP_Z = 30.00
 _M_V90 = 1.0000
-_DZ_TANG_90 = math.hypot(0.5 * BARU_WID_Y * _M_V90, 0.5 * BARU_DEP_Z)  # 25.0000 mm
-Z_BARU_CENTER = Z_CANTONEIRA_V + _DZ_TANG_90        # 1022.2500 mm
-Z_BARU_BOT = Z_BARU_CENTER - 0.5 * BARU_DEP_Z       # 1002.2500 mm
-Z_BARU_TOP = Z_BARU_CENTER + 0.5 * BARU_DEP_Z       # 1042.2500 mm -> corte PMI = 4.7500 mm <= 5.00 mm!
+_DZ_TANG_90 = math.hypot(0.5 * BARU_WID_Y * _M_V90, 0.5 * BARU_DEP_Z) + 0.05  # 25.05 mm
+Z_BARU_CENTER = Z_CANTONEIRA_V + _DZ_TANG_90        # 1028.3000 mm
+Z_BARU_BOT = Z_BARU_CENTER - 0.5 * BARU_DEP_Z       # 1013.3000 mm
+Z_BARU_TOP = Z_BARU_CENTER + 0.5 * BARU_DEP_Z       # 1043.3000 mm -> corte PMI = 5.8000 mm!
 
 # Camadas Y do mecanismo e trem de potência (desacopladas para 0.000000 mm³ colisão)
 Y_PORTAL_F_MIN, Y_PORTAL_F_MAX = -43.00, -36.65
 Y_L3_MIN, Y_L3_MAX = -33.50, -27.15
 Y_L2_MIN, Y_L2_MAX = -24.50, -18.15
+Y_L2_BOSS_MAX = -14.80                              # Cubo traseiro integral Ø34 mm de L2 (livre de L5 em -13.70)
+Y_CRANK_BOLT = -19.80                               # Parafuso transversal diametral M6x40 Cl. 10.9 (eixo Z_loc)
 Y_PORTAL_R_MIN, Y_PORTAL_R_MAX = 24.00, 30.35
+Y_CW_MIN, Y_CW_MAX = 46.25, 58.95                   # Contrapeso em barra/chapa comercial 1/2" (12,70 mm)
+CW_R_IN, CW_R_OUT = 26.80, 43.20                    # Livre de f204_r (R=22) e interno ao círculo base do came (R=52)
+CW_BOLT_R = 35.00                                   # 2x M6x25 DIN 912 + porcas DIN 934 (Y=69.05..74.05)
+CW_BOLT_HALF_ANG_DEG = 26.00                        # Ângulos locais 154° e 206° (±26° em torno de 180°)
+CW_THETA_C_DEG = 179.27093841                       # Fase exata p/ zerar U_z residual do came + porca M6
+CW_HALF_SPAN_DEG = 40.09989294                      # Semi-abertura (80,1998° total) p/ |U_rot,tot| < 0,01 g·mm
 Y_CAM_MIN, Y_CAM_MAX = 59.00, 69.00
 Y_CAM_MID = 64.00
 
@@ -302,6 +310,40 @@ def make_oring_pin_y(x: float, z: float, d_pin: float, y_min: float, y_max: floa
     return pin.cut(ring_cuts).removeSplitter(), orings[0].fuse(orings[1:]).removeSplitter()
 
 
+def make_hex_prism_z(x: float, y: float, across_flats_s: float, z_min: float, z_max: float) -> Part.Shape:
+    r_circ = across_flats_s / math.sqrt(3.0)
+    pts = [
+        App.Vector(x + r_circ * math.cos(k * math.pi / 3.0),
+                   y + r_circ * math.sin(k * math.pi / 3.0), z_min)
+        for k in range(6)
+    ]
+    pts.append(pts[0])
+    return Part.Face(Part.makePolygon(pts)).extrude(App.Vector(0.0, 0.0, z_max - z_min)).removeSplitter()
+
+
+def make_hex_prism_x(y: float, z: float, across_flats_s: float, x_min: float, x_max: float) -> Part.Shape:
+    r_circ = across_flats_s / math.sqrt(3.0)
+    pts = [
+        App.Vector(x_min, y + r_circ * math.cos(k * math.pi / 3.0),
+                   z + r_circ * math.sin(k * math.pi / 3.0))
+        for k in range(6)
+    ]
+    pts.append(pts[0])
+    return Part.Face(Part.makePolygon(pts)).extrude(App.Vector(x_max - x_min, 0.0, 0.0)).removeSplitter()
+
+
+def make_hex_prism_y(x: float, z: float, across_flats_s: float, y_min: float, y_max: float) -> Part.Shape:
+    r_circ = across_flats_s / math.sqrt(3.0)
+    pts = [
+        App.Vector(x + r_circ * math.cos(k * math.pi / 3.0),
+                   y_min,
+                   z + r_circ * math.sin(k * math.pi / 3.0))
+        for k in range(6)
+    ]
+    pts.append(pts[0])
+    return Part.Face(Part.makePolygon(pts)).extrude(App.Vector(0.0, y_max - y_min, 0.0)).removeSplitter()
+
+
 def make_hollow_metalon_box(x0: float, y0: float, z0: float,
                             dx: float, dy: float, dz: float,
                             axis: str, wall: float = 1.50) -> Part.Shape:
@@ -332,9 +374,9 @@ def build_base_plate_with_drop_window() -> Part.Shape:
     for xs in (-16.0, 16.0):
         for ys in (-27.5, 27.5):
             cuts.append(Part.makeCylinder(3.15, 12.0, App.Vector(xs, ys, Z_BASE_BOT - 2.0), App.Vector(0, 0, 1)))
-    for xk in (-158.0, 158.0):
-        for yk in (-36.5, 43.5):
-            cuts.append(Part.makeCylinder(4.10, 12.0, App.Vector(xk, yk, Z_BASE_BOT - 2.0), App.Vector(0, 0, 1)))
+    for xk in (-141.0, 141.0):
+        for yk in (-36.50, 43.55):
+            cuts.append(Part.makeCylinder(4.30, 12.0, App.Vector(xk, yk, Z_BASE_BOT - 2.0), App.Vector(0, 0, 1)))
     return base.cut(cuts).removeSplitter()
 
 
@@ -426,12 +468,13 @@ def build_cantoneira_baru_support() -> Part.Shape:
     ]
     cantoneira = Part.Face(Part.makePolygon(pts_v_yz)).extrude(App.Vector(52.0, 0.0, 0.0))
 
+    h_fl_vert = (z_out_bot + 19.5) - Z_STRUCT_BOT + 0.50  # 28.14 mm (acompanha os +6,0 mm do V)
     legs = []
     for sgn in (-1.0, 1.0):
         y_fl0 = 20.5 if sgn > 0 else -32.5
         fl_bot = Part.makeBox(44.0, 12.0, 3.00, App.Vector(-22.0, y_fl0, Z_STRUCT_BOT))
-        fl_vert = Part.makeBox(44.0, 3.0, 21.50, App.Vector(-22.0, 19.5 if sgn > 0 else -22.5, Z_STRUCT_BOT))
-        gus = Part.makeBox(44.0, 6.0, 9.0, App.Vector(-22.0, 13.5 if sgn > 0 else -19.5, zv + 6.0))
+        fl_vert = Part.makeBox(44.0, 3.0, h_fl_vert, App.Vector(-22.0, 19.5 if sgn > 0 else -22.5, Z_STRUCT_BOT))
+        gus = Part.makeBox(44.0, 4.5, 8.5, App.Vector(-22.0, 15.5 if sgn > 0 else -20.0, zv + 6.0))
         y_tab = 5.5 if sgn > 0 else -11.5
         stop_tab = Part.makeBox(3.50, 6.00, 8.00, App.Vector(22.50, y_tab, zv))
         legs.extend([fl_bot, fl_vert, gus, stop_tab])
@@ -542,7 +585,10 @@ def build_piston_and_blade_local() -> tuple[Part.Shape, Part.Shape, Part.Shape, 
 def build_cam_disc_local() -> Part.Shape:
     """
     Perfil exato do came de disco 3-4-5 (`Came_Extrator_O2`) gerado pela envoltória
-    analítica do rolete oscilante Ø19 mm (R_base = 52 mm, R_rolo = 9,5 mm) centrada em O2.
+    analítica do rolete oscilante Ø19 mm (R_base = 52 mm, R_rolo = 9,5 mm) centrada em O2,
+    com 3x furos de alívio Ø19,0 mm (broca comercial 3/4 pol em R_c = 34,50 mm, R in [25,0; 44,0] mm)
+    no lóbulo +x_loc (~97,5% de auto-balanceamento no plano Y=64 mm), 2x furos passantes Ø6,40 mm
+    (R = 35,0 mm, 180° ± 26°) p/ fixação do contrapeso traseiro e cubo estendido c/ furo radial p/ M6 DIN 916.
     """
     n_pts = 360
     cx_cam, cz_cam = [], []
@@ -567,9 +613,30 @@ def build_cam_disc_local() -> Part.Shape:
     cam_pts.append(cam_pts[0])
 
     plate = Part.Face(Part.makePolygon(cam_pts)).extrude(App.Vector(0.0, Y_CAM_MAX - Y_CAM_MIN, 0.0))
-    hub = Part.makeCylinder(20.0, 14.0, App.Vector(0.0, Y_CAM_MIN - 2.0, 0.0), App.Vector(0, 1, 0))
-    bore = Part.makeCylinder(10.02, 20.0, App.Vector(0.0, Y_CAM_MIN - 4.0, 0.0), App.Vector(0, 1, 0))
-    return plate.fuse(hub).cut(bore).removeSplitter()
+    hub = Part.makeCylinder(20.0, 17.5, App.Vector(0.0, Y_CAM_MIN - 2.0, 0.0), App.Vector(0, 1, 0))
+    bore = Part.makeCylinder(10.02, 22.0, App.Vector(0.0, Y_CAM_MIN - 4.0, 0.0), App.Vector(0, 1, 0))
+    cam_raw = plate.fuse(hub).cut(bore).removeSplitter()
+
+    cam_cuts = [
+        Part.makeCylinder(
+            9.50, 14.0,
+            App.Vector(34.50 * math.cos(math.radians(1.62 + da)), Y_CAM_MIN - 2.0,
+                       34.50 * math.sin(math.radians(1.62 + da))),
+            App.Vector(0, 1, 0),
+        )
+        for da in (0.0, 41.0, -41.0)
+    ]
+    for sgn in (-1.0, 1.0):
+        ang_b = math.radians(180.0 + sgn * CW_BOLT_HALF_ANG_DEG)
+        cam_cuts.append(
+            Part.makeCylinder(
+                3.20, 14.0,
+                App.Vector(CW_BOLT_R * math.cos(ang_b), Y_CAM_MIN - 2.0, CW_BOLT_R * math.sin(ang_b)),
+                App.Vector(0, 1, 0),
+            )
+        )
+    cam_cuts.append(Part.makeCylinder(3.05, 12.0, App.Vector(-21.5, 72.0, 0.0), App.Vector(1, 0, 0)))
+    return cam_raw.cut(cam_cuts[0].fuse(cam_cuts[1:])).removeSplitter()
 
 
 def build_cam_extractor_system_local() -> dict[str, Part.Shape]:
@@ -623,9 +690,9 @@ def build_cam_extractor_system_local() -> dict[str, Part.Shape]:
         Part.makeCylinder(4.10, 12.0, App.Vector(0.0, Y_CAM_MID - 6.0, -TIR_LEN), App.Vector(0, 1, 0)),
     ]).removeSplitter()
 
-    # Alavanca_Ejetora (local em O_ext = (34.0, 0.0, 996.0))
+    # Alavanca_Ejetora (local em O_ext = (34.0, 0.0, 996.0); pá elevada +6 mm acompanhando a cantoneira/baru)
     hub_mid = Part.makeCylinder(6.50, 7.0, App.Vector(0.0, -3.5, 0.0), App.Vector(0, 1, 0))
-    paddle = Part.makeBox(51.5, 6.0, 6.5, App.Vector(-51.5, -3.0, -4.5))
+    paddle = Part.makeBox(51.5, 6.0, 12.5, App.Vector(-51.5, -3.0, -4.5))
     ext_bridge = make_bushing_y(0.0, 0.0, 8.10, 12.00, 3.0, Y_CAM_MAX + 5.0)
     # Anel na ponte que passa pelo ear_B (Y in [24, 28]) tem folga; o furo interno D8.10 veste shaft_ext
     arm_ext_ang = math.degrees(EXT_PHI0_RAD)
@@ -656,15 +723,91 @@ def build_cam_extractor_system_local() -> dict[str, Part.Shape]:
 def build_l2_crank_and_shaft_local() -> dict[str, Part.Shape]:
     """
     Corpo 2 motorizado (centrado em O2 = (-83.9711, 1358.0385)):
-      - Eixo_Principal_O2_20rpm: Eixo Ø20 mm SAE 1045 (Y in [-24.5, +175.0], SEM cruzar L3!)
-      - Elo2_Manivela_L2: Manivela L2 = 28.9778 mm em barra chata 1.1/4"x1/4" (Y in [-24.50, -18.15])
-      - Buchas_Catalogo_A + Pino_Eixo_A + Aneis_Retencao_ORing_A
+      - Eixo_Principal_O2_20rpm: Eixo Ø20 mm SAE 1045 (Y in [-24.5, +175.0]) c/ furo diametral Ø6,10 mm
+        em Y = -19,80 mm (ao longo de Z_loc) e rebaixo plano em Y = 69,5..74,5 mm p/ prisioneiro M6 do came;
+      - Elo2_Manivela_L2: Manivela L2 = 28,9778 mm (SAE 1045) c/ braço em Y in [-24.50, -18.15] e cubo
+        cilíndrico traseiro integral Ø34,0 mm (R = 17,0 mm, Y in [-24.50, -14.80]), assentos planos em
+        Z_loc = ±15,00 mm e furo transversal Ø6,10 mm;
+      - Parafuso_Fixacao_Manivela_M6: DIN 912 M6x40 Cl. 10.9 + porca autotravante DIN 985 M6 (s=10 mm,
+        faces paralelas orientadas p/ Y in [-24.80, -14.80] mm, cisalhamento duplo FS = 5,54);
+      - Contrapeso_Balanceamento_O2: Setor semianular em barra chata/chapa comercial 1/2" (12,70 mm,
+        ABNT 1020) em Y in [46.25, 58.95] mm, R in [26.80, 43.20] mm, balanceando 100% de (Corpo2 + m_3A);
+      - Parafusos_Contrapeso_M6: 2x DIN 912 M6x25 + porcas DIN 934 M6 (R = 35,0 mm, 180° ± 26°) +
+        1x prisioneiro Allen DIN 916 M6x10 no cubo traseiro do came;
+      - Buchas_Catalogo_A + Pino_Eixo_A + Aneis_Retencao_ORing_A.
     """
     shaft_o2 = Part.makeCylinder(10.00, 199.5, App.Vector(0.0, Y_L2_MIN, 0.0), App.Vector(0, 1, 0))
     collar_r = make_bushing_y(0.0, 0.0, 20.00, 28.00, Y_PORTAL_R_MAX + 24.5, Y_CAM_MIN - 2.2)
-    shaft_all = shaft_o2.fuse([collar_r]).removeSplitter()
+    hole_m6_crank = Part.makeCylinder(3.05, 44.0, App.Vector(0.0, Y_CRANK_BOLT, -22.0), App.Vector(0, 0, 1))
+    flat_setscrew = Part.makeBox(3.05, 7.2, 8.0, App.Vector(-12.2, 68.4, -4.0))
+    shaft_all = shaft_o2.fuse([collar_r]).cut([hole_m6_crank, flat_setscrew]).removeSplitter()
 
-    l2_bar = make_rounded_bar_xz(L2, 34.00, Y_L2_MIN, Y_L2_MAX, d_hole1=20.02, d_hole2=14.04)
+    l2_raw = make_rounded_bar_xz(L2, 34.00, Y_L2_MIN, Y_L2_MAX, d_hole1=0.0, d_hole2=14.04)
+    hub_boss = Part.makeCylinder(17.00, Y_L2_BOSS_MAX - Y_L2_MIN, App.Vector(0.0, Y_L2_MIN, 0.0), App.Vector(0, 1, 0))
+    bore_o2 = Part.makeCylinder(10.01, 14.0, App.Vector(0.0, Y_L2_MIN - 1.0, 0.0), App.Vector(0, 1, 0))
+    flat_top = Part.makeBox(18.0, 10.2, 5.0, App.Vector(-9.0, -24.7, 15.00))
+    flat_bot = Part.makeBox(18.0, 10.2, 5.0, App.Vector(-9.0, -24.7, -20.00))
+    l2_bar = l2_raw.fuse(hub_boss).cut(bore_o2.fuse([flat_top, flat_bot, hole_m6_crank])).removeSplitter()
+
+    # Parafuso DIN 912 M6x40 Cl. 10.9 (cabeça Ø10x5,5 em Z_loc=+15,02..+20,52) + Porca Parlock DIN 985 M6 (Z_loc=-15,02..-20,52)
+    crank_b_head = Part.makeCylinder(5.00, 5.50, App.Vector(0.0, Y_CRANK_BOLT, 15.02), App.Vector(0, 0, 1)).cut(
+        make_hex_prism_z(0.0, Y_CRANK_BOLT, 5.00, 17.72, 21.00)
+    )
+    crank_b_shank = Part.makeCylinder(2.98, 40.00, App.Vector(0.0, Y_CRANK_BOLT, -24.98), App.Vector(0, 0, 1))
+    crank_b_nut_hex = make_hex_prism_z(0.0, Y_CRANK_BOLT, 10.00, -19.02, -15.02)
+    crank_b_nut_col = Part.makeCylinder(4.80, 1.50, App.Vector(0.0, Y_CRANK_BOLT, -20.52), App.Vector(0, 0, 1))
+    crank_bolt_m6 = crank_b_shank.fuse([crank_b_head, crank_b_nut_hex, crank_b_nut_col]).removeSplitter()
+
+    # Contrapeso semianular parafusado (Y in [46.25, 58.95] mm, espessura comercial 1/2" = 12,70 mm) + 2x M6x25 DIN 912
+    dy_cw = Y_CW_MAX - Y_CW_MIN  # 12.70 mm
+    a1 = math.radians(CW_THETA_C_DEG - CW_HALF_SPAN_DEG)
+    am = math.radians(CW_THETA_C_DEG)
+    a2 = math.radians(CW_THETA_C_DEG + CW_HALF_SPAN_DEG)
+    cw_wire = Part.Wire([
+        Part.Arc(
+            App.Vector(CW_R_OUT * math.cos(a1), Y_CW_MIN, CW_R_OUT * math.sin(a1)),
+            App.Vector(CW_R_OUT * math.cos(am), Y_CW_MIN, CW_R_OUT * math.sin(am)),
+            App.Vector(CW_R_OUT * math.cos(a2), Y_CW_MIN, CW_R_OUT * math.sin(a2)),
+        ).toShape(),
+        Part.makeLine(
+            App.Vector(CW_R_OUT * math.cos(a2), Y_CW_MIN, CW_R_OUT * math.sin(a2)),
+            App.Vector(CW_R_IN * math.cos(a2), Y_CW_MIN, CW_R_IN * math.sin(a2)),
+        ),
+        Part.Arc(
+            App.Vector(CW_R_IN * math.cos(a2), Y_CW_MIN, CW_R_IN * math.sin(a2)),
+            App.Vector(CW_R_IN * math.cos(am), Y_CW_MIN, CW_R_IN * math.sin(am)),
+            App.Vector(CW_R_IN * math.cos(a1), Y_CW_MIN, CW_R_IN * math.sin(a1)),
+        ).toShape(),
+        Part.makeLine(
+            App.Vector(CW_R_IN * math.cos(a1), Y_CW_MIN, CW_R_IN * math.sin(a1)),
+            App.Vector(CW_R_OUT * math.cos(a1), Y_CW_MIN, CW_R_OUT * math.sin(a1)),
+        ),
+    ])
+    cw_sector = Part.Face(cw_wire).extrude(App.Vector(0.0, dy_cw, 0.0))
+    cw_cut_tools = []
+    cw_bolt_solids = []
+    for sgn in (-1.0, 1.0):
+        ang_b = math.radians(180.0 + sgn * CW_BOLT_HALF_ANG_DEG)
+        bx, bz = CW_BOLT_R * math.cos(ang_b), CW_BOLT_R * math.sin(ang_b)
+        thru_h = Part.makeCylinder(3.20, dy_cw + 2.0, App.Vector(bx, Y_CW_MIN - 1.0, bz), App.Vector(0, 1, 0))
+        cbore_h = Part.makeCylinder(5.50, 4.38, App.Vector(bx, Y_CW_MIN - 0.10, bz), App.Vector(0, 1, 0))
+        cw_cut_tools.append(thru_h.fuse(cbore_h).removeSplitter())
+
+        b_hd = Part.makeCylinder(5.00, 6.00, App.Vector(bx, 44.51, bz), App.Vector(0, 1, 0)).cut(
+            make_hex_prism_y(bx, bz, 5.00, 44.35, 47.51)
+        )
+        b_shk = Part.makeCylinder(2.98, 25.00, App.Vector(bx, 50.51, bz), App.Vector(0, 1, 0))
+        b_nut = make_hex_prism_y(bx, bz, 10.00, 69.05, 74.05)
+        cw_bolt_solids.append(b_shk.fuse([b_hd, b_nut]).removeSplitter())
+
+    setscrew_m6 = Part.makeCylinder(2.98, 10.00, App.Vector(-19.22, 72.0, 0.0), App.Vector(1, 0, 0)).cut(
+        make_hex_prism_x(72.0, 0.0, 3.00, -19.50, -16.22)
+    ).removeSplitter()
+    cw_bolt_solids.append(setscrew_m6)
+
+    cw_shape = cw_sector.cut(cw_cut_tools[0].fuse(cw_cut_tools[1:])).removeSplitter()
+    cw_bolts_shape = cw_bolt_solids[0].fuse(cw_bolt_solids[1:]).removeSplitter()
+
     bush_l2_a = make_bushing_y(L2, 0.0, 12.04, 14.00, Y_L2_MIN + 0.05, Y_L2_MAX - 0.05)
 
     # Pino liso Ø12 mm da junta A (Y in [-35.80, -16.00] acoplando L3[-33.5..-27.15] e L2[-24.5..-18.15])
@@ -676,6 +819,9 @@ def build_l2_crank_and_shaft_local() -> dict[str, Part.Shape]:
     return {
         "Eixo_Principal_O2_20rpm": shaft_all,
         "Elo2_Manivela_L2": l2_bar,
+        "Parafuso_Fixacao_Manivela_M6": crank_bolt_m6,
+        "Contrapeso_Balanceamento_O2": cw_shape,
+        "Parafusos_Contrapeso_M6": cw_bolts_shape,
         "Buchas_Catalogo_A": bush_l2_a,
         "Pino_Eixo_A": pin_a,
         "Aneis_Retencao_ORing_A": oring_a,
@@ -874,8 +1020,9 @@ def build_enlarged_stand_and_nr12_cabinet() -> tuple[Part.Shape, Part.Shape, Par
     for xp in (CAB_X_MIN, CAB_X_MAX - m):
         for yp in (CAB_Y_FRONT, CAB_Y_REAR - m):
             tubes.append(make_hollow_metalon_box(xp, yp, z_bot_cab, m, m, h_post, axis="Z", wall=w))
-    for yp in (33.55,):
-        tubes.append(make_hollow_metalon_box(CAB_X_MIN, yp, z_bot_cab, m, m, h_post, axis="Z", wall=w))
+    for xp in (CAB_X_MIN, CAB_X_MAX - m):
+        for yp in (33.55,):
+            tubes.append(make_hollow_metalon_box(xp, yp, z_bot_cab, m, m, h_post, axis="Z", wall=w))
     for xp in (CAB_X_MIN, CAB_X_MAX - m):
         for yp in (183.0, 308.0):
             tubes.append(make_hollow_metalon_box(xp, yp, z_bot_cab, m, m, Z_INT_SHELF_TOP - z_bot_cab, axis="Z", wall=w))
@@ -912,6 +1059,17 @@ def build_enlarged_stand_and_nr12_cabinet() -> tuple[Part.Shape, Part.Shape, Par
     for ym in (-54.0, 43.55):
         for zm in (1155.0, 1253.3):
             m_holes.append(Part.makeCylinder(3.05, 28.0, App.Vector(-174.0, ym, zm), App.Vector(1, 0, 0)))
+    # Furos M8 (Ø8,6 mm) de amarração Mesa 1/4" <-> Gabinete Inferior e Traseira Quadro Superior <-> Cavalete
+    for xk in (-141.0, 141.0):
+        for yk in (-36.50, 43.55):
+            m_holes.append(Part.makeCylinder(4.30, 26.0, App.Vector(xk, yk, z_top_stand - 2.0), App.Vector(0, 0, 1)))
+    for xk in (-135.0, 225.0):
+        m_holes.append(Part.makeCylinder(4.30, 56.0, App.Vector(xk, 425.0, z_top_stand - 2.0), App.Vector(0, 0, 1)))
+    # Furos M6 (Ø6,5 mm) p/ as 4x Cantoneiras c/ Mão Francesa (Esquerda X=-182/-170 e Direita X=+272/+260)
+    for xb_v, x_h0 in ((-182.0, -175.0), (272.0, 237.0)):
+        for yc in (-54.00, 43.55):
+            m_holes.append(Part.makeCylinder(3.25, 26.0, App.Vector(xb_v, yc, z_top_stand - 2.0), App.Vector(0, 0, 1)))
+            m_holes.append(Part.makeCylinder(3.25, 28.0, App.Vector(x_h0, yc, 1016.0), App.Vector(1, 0, 0)))
     metalon_frame = metalon_frame.cut(m_holes).removeSplitter()
 
     # 4x Sapatas de piso ampliadas (80x80x4.76 mm, 8 furos Ø10.5 mm)
@@ -950,7 +1108,10 @@ def build_enlarged_stand_and_nr12_cabinet() -> tuple[Part.Shape, Part.Shape, Par
     panels.append(p_rear_low.cut(vent_slots).removeSplitter())
 
     # Lateral direita superior (X=260.02) + inferior estendida até Z=989.57 (X=280.02) + aba de degrau horizontal
-    panels.append(Part.makeBox(1.20, d_cab, h_post, App.Vector(CAB_X_MAX + 0.02, CAB_Y_FRONT, z_bot_cab)))
+    p_right_up = Part.makeBox(1.20, d_cab, h_post, App.Vector(CAB_X_MAX + 0.02, CAB_Y_FRONT, z_bot_cab))
+    p_right_cuts = [Part.makeCylinder(3.30, 8.0, App.Vector(258.0, yc, 1016.0), App.Vector(1, 0, 0))
+                    for yc in (-54.00, 43.55)]
+    panels.append(p_right_up.cut(p_right_cuts).removeSplitter())
     panels.append(Part.makeBox(1.20, 299.55, 199.57, App.Vector(280.02, 135.50, 790.0)))
     panels.append(Part.makeBox(21.20, 299.55, 1.20, App.Vector(CAB_X_MAX + 0.02, 135.50, z_bot_cab)))
     # Lateral esquerda superior + inferior estendida até Z=989.57 (X=-191.22) + aba de degrau horizontal
@@ -960,7 +1121,10 @@ def build_enlarged_stand_and_nr12_cabinet() -> tuple[Part.Shape, Part.Shape, Par
         for ym in (-54.0, 43.55) for zm in (1155.0, 1253.3)
     ]
     panels.append(p_left_top.cut(p_left_cuts).removeSplitter())
-    panels.append(Part.makeBox(1.20, d_cab, 51.63, App.Vector(CAB_X_MIN - 1.22, CAB_Y_FRONT, z_bot_cab)))
+    p_left_bot = Part.makeBox(1.20, d_cab, 51.63, App.Vector(CAB_X_MIN - 1.22, CAB_Y_FRONT, z_bot_cab))
+    p_left_bot_cuts = [Part.makeCylinder(3.30, 8.0, App.Vector(-174.0, yc, 1016.0), App.Vector(1, 0, 0))
+                       for yc in (-54.00, 43.55)]
+    panels.append(p_left_bot.cut(p_left_bot_cuts).removeSplitter())
     panels.append(Part.makeBox(1.20, 299.55, 199.57, App.Vector(-191.22, 135.50, 790.0)))
     panels.append(Part.makeBox(21.20, 299.55, 1.20, App.Vector(-191.22, 135.50, z_bot_cab)))
     # Teto fechado
@@ -989,24 +1153,24 @@ def build_enlarged_stand_and_nr12_cabinet() -> tuple[Part.Shape, Part.Shape, Par
     ]
     poly_window = poly_window.cut(v_cuts).removeSplitter()
 
-    # Calha de Alimentação Segura NR-12 (42x48 mm em Y=0) — idêntica ao modelo manual!
+    # Calha de Alimentação Segura NR-12 (boca direita elevada +12 mm p/ entrega suave do baru deitado 50x40x30 mm)
     pts_chute_out = [
         App.Vector(-215.0, -22.50, Z_WORK_DATUM + 78.50),
-        App.Vector(-27.0,  -22.50, Z_WORK_DATUM + 21.00),
-        App.Vector(-27.0,  -22.50, Z_WORK_DATUM + 72.00),
+        App.Vector(-27.0,  -22.50, Z_WORK_DATUM + 33.00),
+        App.Vector(-27.0,  -22.50, Z_WORK_DATUM + 76.00),
         App.Vector(-215.0, -22.50, Z_WORK_DATUM + 129.50),
         App.Vector(-215.0, -22.50, Z_WORK_DATUM + 78.50),
     ]
     chute_outer = Part.Face(Part.makePolygon(pts_chute_out)).extrude(App.Vector(0.0, 45.0, 0.0))
-    k_bot = (80.00 - 22.50) / 188.0
-    k_top = (128.00 - 70.50) / 188.0
+    k_bot = (80.00 - 34.50) / 188.0
+    k_top = (128.00 - 74.50) / 188.0
     x_in_L, x_in_R = -216.0, -26.0
     pts_tunnel_in = [
-        App.Vector(x_in_L, -21.00, Z_WORK_DATUM + 22.50 + k_bot * (-27.0 - x_in_L)),
-        App.Vector(x_in_R, -21.00, Z_WORK_DATUM + 22.50 + k_bot * (-27.0 - x_in_R)),
-        App.Vector(x_in_R, -21.00, Z_WORK_DATUM + 70.50 + k_top * (-27.0 - x_in_R)),
-        App.Vector(x_in_L, -21.00, Z_WORK_DATUM + 70.50 + k_top * (-27.0 - x_in_L)),
-        App.Vector(x_in_L, -21.00, Z_WORK_DATUM + 22.50 + k_bot * (-27.0 - x_in_L)),
+        App.Vector(x_in_L, -21.00, Z_WORK_DATUM + 34.50 + k_bot * (-27.0 - x_in_L)),
+        App.Vector(x_in_R, -21.00, Z_WORK_DATUM + 34.50 + k_bot * (-27.0 - x_in_R)),
+        App.Vector(x_in_R, -21.00, Z_WORK_DATUM + 74.50 + k_top * (-27.0 - x_in_R)),
+        App.Vector(x_in_L, -21.00, Z_WORK_DATUM + 74.50 + k_top * (-27.0 - x_in_L)),
+        App.Vector(x_in_L, -21.00, Z_WORK_DATUM + 34.50 + k_bot * (-27.0 - x_in_L)),
     ]
     chute = chute_outer.cut(Part.Face(Part.makePolygon(pts_tunnel_in)).extrude(App.Vector(0.0, 42.0, 0.0))).removeSplitter()
     fl_portal = Part.makeBox(34.0, 1.48, 44.0, App.Vector(-122.0, 22.50, Z_WORK_DATUM + 43.0))
@@ -1044,6 +1208,124 @@ def build_enlarged_stand_and_nr12_cabinet() -> tuple[Part.Shape, Part.Shape, Par
     cab_bolts_shape = cab_bolts[0].fuse(cab_bolts[1:]).removeSplitter()
 
     return metalon_frame, sheet_panels, poly_window, chute, feet_shape, cab_bolts_shape
+
+
+def build_motorized_gussets_and_bolts() -> tuple[Part.Shape, Part.Shape]:
+    """
+    Conjunto estrutural de amarração da Estrutura Superior ao Gabinete/Cavalete Inferior Ampliado:
+      1. 4x Cantoneiras c/ Dupla Mão Francesa Dobrada em Chapa #11 (3,00 mm, ABNT 1020) nos montantes
+         laterais da baia da prensa (Esquerda X=-171,26..-189,80; Direita X=+261,26..+279,80; Y=-54,0 e +43,55),
+         parafusadas com 8x Parafusos Sextavados M6x30 DIN 933 Cl. 8.8.
+      2. 10x Mãos Francesas Triangulares em Chapa 3/16" (4,76 mm, c/ chanfro de alívio 12 mm p/ solda)
+         contraventando as 6 colunas do cavalete ampliado nos planos YZ e XZ (Z = 896,96..961,96 mm).
+      3. 4x Parafusos M8x35 (Mesa 1/4" <-> Travessas X=±141) + 2x Parafusos M8x55 c/ calços 1/4" na traseira (Y=425).
+    """
+    brackets_and_gussets = []
+    fasteners = []
+    t_b = 3.00
+
+    # 1. 4x Cantoneiras dobradas c/ dupla mão francesa + 8x Parafusos M6x30
+    side_specs = [
+        (-1.0, -171.26, -189.80, -182.0, -174.5, (-178.28, -174.28), (-149.98, -144.98)),
+        (+1.0, +261.26, +279.80, +272.0, +234.5, (+264.28, +268.28), (+234.98, +239.98)),
+    ]
+    for sx, x_in, x_h_out, xb_v, x_sh0, hd_hx, nt_hx in side_specs:
+        x_v_out = x_in + sx * t_b
+        z_b0 = Z_BASE_BOT + 0.04
+        z_h1 = z_b0 + t_b
+        z_v1 = 1036.00
+        xv_min, xv_max = min(x_in, x_v_out), max(x_in, x_v_out)
+        xh_min, xh_max = min(x_in, x_h_out), max(x_in, x_h_out)
+        for yc in (-54.00, 43.55):
+            y0 = yc - 14.00
+            fl_vert = Part.makeBox(xv_max - xv_min, 28.00, z_v1 - z_b0, App.Vector(xv_min, y0, z_b0))
+            fl_horz = Part.makeBox(xh_max - xh_min, 28.00, t_b, App.Vector(xh_min, y0, z_b0))
+            tri_pts = [
+                App.Vector(x_v_out, y0, z_h1),
+                App.Vector(x_h_out, y0, z_h1),
+                App.Vector(x_v_out, y0, z_v1),
+                App.Vector(x_v_out, y0, z_h1),
+            ]
+            cheek_L = Part.Face(Part.makePolygon(tri_pts)).extrude(App.Vector(0.0, t_b, 0.0))
+            cheek_R = cheek_L.copy()
+            cheek_R.translate(App.Vector(0.0, 28.00 - t_b, 0.0))
+            brk = fl_vert.fuse([fl_horz, cheek_L, cheek_R]).removeSplitter()
+            holes_b = [
+                Part.makeCylinder(3.30, 12.0, App.Vector(xb_v, yc, z_b0 - 2.0), App.Vector(0, 0, 1)),
+                Part.makeCylinder(3.30, 12.0, App.Vector(xv_min - 2.0, yc, 1016.0), App.Vector(1, 0, 0)),
+            ]
+            brackets_and_gussets.append(brk.cut(holes_b).removeSplitter())
+
+            sh_v = Part.makeCylinder(2.95, 29.0, App.Vector(xb_v, yc, 956.5), App.Vector(0, 0, 1))
+            hd_v = make_hex_prism_z(xb_v, yc, 10.0, z_h1 + 0.02, z_h1 + 4.02)
+            nt_v = make_hex_prism_z(xb_v, yc, 10.0, 956.98, 961.98)
+            fasteners.append(sh_v.fuse([hd_v, nt_v]).removeSplitter())
+
+            sh_h = Part.makeCylinder(2.95, 30.0, App.Vector(x_sh0, yc, 1016.0), App.Vector(1, 0, 0))
+            hd_h = make_hex_prism_x(yc, 1016.0, 10.0, hd_hx[0], hd_hx[1])
+            nt_h = make_hex_prism_x(yc, 1016.0, 10.0, nt_hx[0], nt_hx[1])
+            fasteners.append(sh_h.fuse([hd_h, nt_h]).removeSplitter())
+
+    # 2. 10x Mãos Francesas Triangulares (Chapa 3/16" = 4,76 mm) nas colunas do cavalete ampliado
+    t_g = 4.76
+    z_g_top = Z_BASE_BOT - 20.04  # 961.96 mm
+    for xc_col, x_c_in, sx in ((-180.0, -169.96, -1.0), (270.0, 259.96, +1.0)):
+        # Plano YZ: frente (-114.96 -> -62.96, 52 mm), meio (+114.96 -> +54.96, 60 mm), fundo (+414.96 -> +354.96, 60 mm)
+        for y_c_in, dir_y, leg_yz in ((-114.96, +1.0, 52.0), (114.96, -1.0, 60.0), (414.96, -1.0, 60.0)):
+            pts_yz = [
+                App.Vector(xc_col - 0.5 * t_g, y_c_in + dir_y * 12.0, z_g_top),
+                App.Vector(xc_col - 0.5 * t_g, y_c_in + dir_y * leg_yz, z_g_top),
+                App.Vector(xc_col - 0.5 * t_g, y_c_in, z_g_top - leg_yz),
+                App.Vector(xc_col - 0.5 * t_g, y_c_in, z_g_top - 12.0),
+                App.Vector(xc_col - 0.5 * t_g, y_c_in + dir_y * 12.0, z_g_top),
+            ]
+            brackets_and_gussets.append(Part.Face(Part.makePolygon(pts_yz)).extrude(App.Vector(t_g, 0.0, 0.0)))
+
+        # Plano XZ: travessas frontal (Y=-125) e intermediária (Y=+125)
+        for yc_beam in (-125.0, 125.0):
+            pts_xz = [
+                App.Vector(x_c_in - sx * 12.0, yc_beam - 0.5 * t_g, z_g_top),
+                App.Vector(x_c_in - sx * 65.0, yc_beam - 0.5 * t_g, z_g_top),
+                App.Vector(x_c_in, yc_beam - 0.5 * t_g, z_g_top - 65.0),
+                App.Vector(x_c_in, yc_beam - 0.5 * t_g, z_g_top - 12.0),
+                App.Vector(x_c_in - sx * 12.0, yc_beam - 0.5 * t_g, z_g_top),
+            ]
+            brackets_and_gussets.append(Part.Face(Part.makePolygon(pts_xz)).extrude(App.Vector(0.0, t_g, 0.0)))
+
+    # 3. 4x Parafusos M8x35 (Mesa 1/4" <-> Travessas X=±141) + 2x Parafusos M8x55 traseiros (Y=425) c/ calços 1/4"
+    for xk in (-141.0, 141.0):
+        for yk in (-36.50, 43.55):
+            w_top = Part.makeCylinder(7.5, 1.60, App.Vector(xk, yk, Z_BASE_TOP + 0.02), App.Vector(0, 0, 1)).cut(
+                Part.makeCylinder(4.20, 3.0, App.Vector(xk, yk, Z_BASE_TOP - 0.5), App.Vector(0, 0, 1))
+            )
+            hd_m8 = make_hex_prism_z(xk, yk, 13.0, Z_BASE_TOP + 1.62, Z_BASE_TOP + 6.92)
+            sh_m8 = Part.makeCylinder(3.95, 35.50, App.Vector(xk, yk, 954.50), App.Vector(0, 0, 1))
+            w_bot = Part.makeCylinder(7.5, 1.60, App.Vector(xk, yk, 960.38), App.Vector(0, 0, 1)).cut(
+                Part.makeCylinder(4.20, 3.0, App.Vector(xk, yk, 959.8), App.Vector(0, 0, 1))
+            )
+            nt_m8 = make_hex_prism_z(xk, yk, 13.0, 953.88, 960.38)
+            fasteners.append(w_top.fuse([hd_m8, sh_m8, w_bot, nt_m8]).removeSplitter())
+
+    z_rail_up_top = Z_STRUCT_BOT + 20.00  # 1008.37 mm
+    for xk in (-135.0, 225.0):
+        shim = Part.makeBox(28.0, 19.6, 6.30, App.Vector(xk - 14.0, 415.2, Z_BASE_BOT + 0.03)).cut(
+            Part.makeCylinder(4.30, 10.0, App.Vector(xk, 425.0, Z_BASE_BOT - 1.0), App.Vector(0, 0, 1))
+        )
+        brackets_and_gussets.append(shim.removeSplitter())
+        w_top = Part.makeCylinder(8.0, 1.60, App.Vector(xk, 425.0, z_rail_up_top + 0.02), App.Vector(0, 0, 1)).cut(
+            Part.makeCylinder(4.20, 3.0, App.Vector(xk, 425.0, z_rail_up_top - 0.5), App.Vector(0, 0, 1))
+        )
+        hd_m8 = make_hex_prism_z(xk, 425.0, 13.0, z_rail_up_top + 1.62, z_rail_up_top + 6.92)
+        sh_m8 = Part.makeCylinder(3.95, 55.50, App.Vector(xk, 425.0, 954.50), App.Vector(0, 0, 1))
+        w_bot = Part.makeCylinder(8.0, 1.60, App.Vector(xk, 425.0, 960.38), App.Vector(0, 0, 1)).cut(
+            Part.makeCylinder(4.20, 3.0, App.Vector(xk, 425.0, 959.8), App.Vector(0, 0, 1))
+        )
+        nt_m8 = make_hex_prism_z(xk, 425.0, 13.0, 953.88, 960.38)
+        fasteners.append(w_top.fuse([hd_m8, sh_m8, w_bot, nt_m8]).removeSplitter())
+
+    gussets_sh = brackets_and_gussets[0].fuse(brackets_and_gussets[1:]).removeSplitter()
+    bolts_sh = fasteners[0].fuse(fasteners[1:]).removeSplitter()
+    return gussets_sh, bolts_sh
 
 
 def build_sheet_metal_chute_and_reservoir() -> tuple[Part.Shape, Part.Shape]:
@@ -1117,7 +1399,8 @@ def build_feeding_hopper_reservoir() -> Part.Shape:
 # 8. CONTROLADOR CINEMÁTICO NATIVO (EXPRESSION ENGINE C++ PARA 360° + CAME EXTRATOR)
 # =========================================================================================
 MOVING_GROUPS = {
-    "O2": ("Eixo_Principal_O2_20rpm", "Elo2_Manivela_L2", "Came_Extrator_O2",
+    "O2": ("Eixo_Principal_O2_20rpm", "Elo2_Manivela_L2", "Parafuso_Fixacao_Manivela_M6",
+           "Came_Extrator_O2", "Contrapeso_Balanceamento_O2", "Parafusos_Contrapeso_M6",
            "Buchas_Catalogo_A", "Pino_Eixo_A", "Aneis_Retencao_ORing_A"),
     "L3": ("Elo3_Biela_L3", "Buchas_Catalogo_L3"),
     "L4": ("Elo4_Balancim_L4", "Buchas_Catalogo_L4"),
@@ -1399,7 +1682,10 @@ PART_MATERIAL_ASSIGNMENTS = {
     "Aneis_Retencao_ORing_O4": "Borracha_NBR_70",
     "Eixo_Principal_O2_20rpm": "Aco_SAE_1045",
     "Elo2_Manivela_L2": "Aco_SAE_1045",
+    "Parafuso_Fixacao_Manivela_M6": "Aco_SAE_1045",
     "Came_Extrator_O2": "Aco_SAE_1045",
+    "Contrapeso_Balanceamento_O2": "Aco_ABNT_1020",
+    "Parafusos_Contrapeso_M6": "Aco_SAE_1045",
     "Buchas_Catalogo_A": "Bronze_TM23_SAE_660",
     "Pino_Eixo_A": "Aco_SAE_1045",
     "Aneis_Retencao_ORing_A": "Borracha_NBR_70",
@@ -1427,6 +1713,8 @@ PART_MATERIAL_ASSIGNMENTS = {
     "Redutor_Helicoidal_20_1": "Ferro_Fundido_GG20",
     "Base_Tensora_Motor": "Aco_ABNT_1020",
     "Quadro_Tubular_Metalon_20x20": "Aco_ABNT_1020",
+    "Cantoneiras_Maos_Francesas_Uniao": "Aco_ABNT_1020",
+    "Parafusos_Uniao_Gabinete_M8": "Aco_SAE_1045",
     "Sapatas_Ancoragem_Piso": "Aco_ABNT_1020",
     "Carenagem_Chapa_Galvanizada": "Aco_ABNT_1020",
     "Visor_Policarbonato_NR12": "Policarbonato_NR12",
@@ -1523,7 +1811,7 @@ def infer_finish_preset(name: str) -> str:
         return "wood_baru"
     if "Carenagem" in name or "Calha_Descarga" in name:
         return "galvanized"
-    if any(k in name for k in ("Eixo_", "Pino_", "Pistao", "Navalha", "Volante", "Parafusos", "Espacadores", "Tirante", "Mola")):
+    if any(k in name for k in ("Eixo_", "Pino_", "Pistao", "Navalha", "Volante", "Parafuso", "Contrapeso", "Espacadores", "Tirante", "Mola")):
         return "machined_steel"
     return "satin_paint"
 
@@ -1580,7 +1868,7 @@ def configure_all_gui_view_providers(doc: App.Document) -> None:
         gdoc = Gui.getDocument(doc.Name)
         if gdoc and gdoc.ActiveView:
             gdoc.ActiveView.viewIsometric()
-            Gui.SendMsgToMainWindow("ViewFit")
+            gdoc.ActiveView.fitAll()
     except Exception:
         pass
 
@@ -1674,14 +1962,19 @@ def build_prensa_baru_motorizada_v1(initial_theta2_deg: float = 75.0) -> App.Doc
     add_part_feature(doc, sub01, "Pino_Eixo_O4", "Pino Liso D12 mm c/ Canaletas O-Ring de O4", pin_o4_sh, C_PIN_1045)
     add_part_feature(doc, sub01, "Aneis_Retencao_ORing_O4", "2x Aneis O-Ring NBR 70 (10x1.8 mm) de O4", oring_o4_sh, C_GRIP_RUBBER)
 
-    # SUBCONJUNTO 02: Eixo O2 (20 RPM) + Manivela L2 (K=1.5) + Came Extrator 3-4-5
+    # SUBCONJUNTO 02: Eixo O2 (20 RPM) + Manivela L2 Parafusada + Came Aliviado + Contrapeso O2
+    C_BOLT_ZINC_88 = (0.86, 0.70, 0.24)
+    C_COUNTERWEIGHT = (0.32, 0.38, 0.46)
     sub02 = doc.addObject("App::Part", "Subconjunto_02_Manivela_O2_e_Came")
-    sub02.Label = "02_Eixo_O2_20rpm_Manivela_L2_e_Came_Extrator"
+    sub02.Label = "02_Eixo_O2_20rpm_Manivela_L2_Came_Aliviado_e_Contrapeso"
     l2_parts = build_l2_crank_and_shaft_local()
     ext_parts = build_cam_extractor_system_local()
-    add_part_feature(doc, sub02, "Eixo_Principal_O2_20rpm", "Eixo Principal O2 D20 mm (20 RPM, SAE 1045)", l2_parts["Eixo_Principal_O2_20rpm"], C_PIN_1045)
-    add_part_feature(doc, sub02, "Elo2_Manivela_L2", "Manivela L2 = 28.98 mm (K = 1.5 Grashof Classe I)", l2_parts["Elo2_Manivela_L2"], C_L2_CRANK)
-    add_part_feature(doc, sub02, "Came_Extrator_O2", "Came de Disco 3-4-5 do Extrator Automatico (R_base=52 mm)", ext_parts["cam"], C_CAM_STEEL)
+    add_part_feature(doc, sub02, "Eixo_Principal_O2_20rpm", "Eixo Principal O2 D20 mm c/ Furo Transversal M6 (20 RPM, SAE 1045)", l2_parts["Eixo_Principal_O2_20rpm"], C_PIN_1045)
+    add_part_feature(doc, sub02, "Elo2_Manivela_L2", "Manivela L2 = 28.98 mm c/ Cubo Traseiro D34 mm (SAE 1045)", l2_parts["Elo2_Manivela_L2"], C_L2_CRANK)
+    add_part_feature(doc, sub02, "Parafuso_Fixacao_Manivela_M6", "Parafuso Diametral DIN 912 M6x40 Cl. 10.9 + Porca DIN 985 M6", l2_parts["Parafuso_Fixacao_Manivela_M6"], C_BOLT_ZINC_88)
+    add_part_feature(doc, sub02, "Came_Extrator_O2", "Came de Disco 3-4-5 Aliviado (3x D19 mm, R_base=52 mm, SAE 1045)", ext_parts["cam"], C_CAM_STEEL)
+    add_part_feature(doc, sub02, "Contrapeso_Balanceamento_O2", "Contrapeso Semianular 1/2 pol ABNT 1020 (Balanceamento Rotativo 100%)", l2_parts["Contrapeso_Balanceamento_O2"], C_COUNTERWEIGHT)
+    add_part_feature(doc, sub02, "Parafusos_Contrapeso_M6", "2x Parafusos DIN 912 M6x25 + Porcas DIN 934 + Prisioneiro DIN 916 M6x10", l2_parts["Parafusos_Contrapeso_M6"], C_BOLT_ZINC_88)
     add_part_feature(doc, sub02, "Buchas_Catalogo_A", "Bucha Padrao 12x14 mm da Junta A", l2_parts["Buchas_Catalogo_A"], C_BRONZE)
     add_part_feature(doc, sub02, "Pino_Eixo_A", "Pino Liso D12 mm c/ Canaletas O-Ring da Junta A", l2_parts["Pino_Eixo_A"], C_PIN_1045)
     add_part_feature(doc, sub02, "Aneis_Retencao_ORing_A", "2x Aneis O-Ring NBR 70 (10x1.8 mm) da Junta A", l2_parts["Aneis_Retencao_ORing_A"], C_GRIP_RUBBER)
@@ -1766,10 +2059,14 @@ def build_prensa_baru_motorizada_v1(initial_theta2_deg: float = 75.0) -> App.Doc
     sub08_cab = doc.addObject("App::Part", "Subconjunto_08_Cavalete_NR12_e_Extrator_Came")
     sub08_cab.Label = "08_Cavalete_NR12_Ampliado_Moega_Coletor_e_Extrator_Sincronizado"
     metalon_sh, panels_sh, poly_sh, chute_sh, feet_sh, cab_bolts_sh = build_enlarged_stand_and_nr12_cabinet()
+    gussets_uniao_sh, bolts_uniao_sh = build_motorized_gussets_and_bolts()
     discharge_sh, reservoir_sh = build_sheet_metal_chute_and_reservoir()
     feed_hopper_sh = build_feeding_hopper_reservoir()
 
+    C_BOLT_ZINC_88 = (0.86, 0.70, 0.24)
     add_part_feature(doc, sub08_cab, "Quadro_Tubular_Metalon_20x20", "Cavalete 1.50 m + Gabinete NR-12 Ampliado (Metalon 20x20)", metalon_sh, C_METALON)
+    add_part_feature(doc, sub08_cab, "Cantoneiras_Maos_Francesas_Uniao", "4x Cantoneiras Dobradas c/ Mao Francesa (#11 3.0 mm) + 10x Maos Francesas Cavalete (3/16 pol)", gussets_uniao_sh, C_STEEL_STRUCT)
+    add_part_feature(doc, sub08_cab, "Parafusos_Uniao_Gabinete_M8", "6x Parafusos M8 (Mesa/Traseira) + 8x Parafusos M6x30 Cl. 8.8 das Cantoneiras-Mao-Francesa", bolts_uniao_sh, C_BOLT_ZINC_88)
     add_part_feature(doc, sub08_cab, "Sapatas_Ancoragem_Piso", "4x Sapatas de Piso 80x80x4.76 mm c/ 8 Furos D10.5 mm", feet_sh, C_BASE_PLATE)
     add_part_feature(doc, sub08_cab, "Carenagem_Chapa_Galvanizada", "Fechamento NR-12 c/ Aletas Ventilacao Motor (#18)", panels_sh, C_CAB_SHEET, transparency=55)
     add_part_feature(doc, sub08_cab, "Visor_Policarbonato_NR12", "Visor Frontal Transparente NR-12 (Policarbonato 2.0 mm)", poly_sh, C_POLYCARB, transparency=75)
@@ -1784,11 +2081,11 @@ def build_prensa_baru_motorizada_v1(initial_theta2_deg: float = 75.0) -> App.Doc
     add_part_feature(doc, sub08_cab, "Alavanca_Ejetora", "Alavanca Basculante Ejetora no Rasgo da Cantoneira (0..22 deg)", ext_parts["ejector"], C_EXT_NR12)
     add_part_feature(doc, sub08_cab, "Mola_Retorno", "Mola Helicoidal de Retorno do Seguidor do Came", ext_parts["spring"], C_CIRCLIP)
 
-    # SUBCONJUNTO 09: Corpo de Prova Baru 30x50x40 mm
+    # SUBCONJUNTO 09: Corpo de Prova Baru 50(X)x40(Y)x30(Z) mm (+6 mm Elevado)
     sub09 = doc.addObject("App::Part", "Subconjunto_09_Simulacao_Baru")
-    sub09.Label = "09_Corpo_Prova_Baru_Simulado_30x50x40 (Corte PMI = 4.75 mm)"
+    sub09.Label = "09_Corpo_Prova_Baru_Simulado_50x40x30 (Orientacao Deitada Correta, Corte PMI = 5.80 mm)"
     baru_sh = build_simulated_baru_nut(0.0, 0.0, Z_BARU_CENTER)
-    add_part_feature(doc, sub09, "Baru_Simulado_30x50x40", "Baru Simulado 30x50x40 mm na Cantoneira V 90 graus", baru_sh, C_BARU_NUT, transparency=35)
+    add_part_feature(doc, sub09, "Baru_Simulado_30x50x40", "Baru Simulado 50(X)x40(Y)x30(Z) mm na Cantoneira V 90 graus (+6 mm Elevado)", baru_sh, C_BARU_NUT, transparency=35)
 
     # CONTROLADOR CINEMÁTICO PARAMÉTRICO
     ctrl = doc.addObject("App::FeaturePython", "Controlador_Cinematico")
@@ -1838,17 +2135,21 @@ def check_boolean_interference_all_pairs(
     doc: App.Document,
     tol_mm3: float = 1e-4,
     exclude_names: tuple[str, ...] = ("Baru_Simulado_30x50x40",),
+    only_moving_pairs: bool = False,
 ) -> list[tuple[str, str, float]]:
     features = [
         o for o in doc.Objects
         if o.TypeId == "Part::Feature" and o.Name not in exclude_names
         and hasattr(o, "Shape") and not o.Shape.isNull()
     ]
+    is_mov = [bool(getattr(o, "ExpressionEngine", [])) for o in features]
     collisions = []
     n = len(features)
     for i in range(n):
-        s1, bb1 = features[i].Shape, features[i].Shape.BoundBox
+        s1, bb1, m1 = features[i].Shape, features[i].Shape.BoundBox, is_mov[i]
         for j in range(i + 1, n):
+            if only_moving_pairs and not (m1 or is_mov[j]):
+                continue
             s2 = features[j].Shape
             if not bb1.intersect(s2.BoundBox):
                 continue
@@ -1870,6 +2171,21 @@ def check_baru_simulation_poses(doc: App.Document, tol_mm3: float = 1e-4) -> dic
     pms_cols = [(o.Name, baru_sh.common(o.Shape).Volume) for o in machine_features
                 if baru_sh.BoundBox.intersect(o.Shape.BoundBox) and baru_sh.common(o.Shape).Volume > tol_mm3]
 
+    k_bot = (80.00 - 34.50) / 188.0
+    dz_slope_tang = math.hypot(0.5 * BARU_LEN_X * k_bot, 0.5 * BARU_DEP_Z) + 0.35
+    z_mouth_center = Z_WORK_DATUM + 34.50 + dz_slope_tang
+    chute_cols = []
+    for xc in (-190.0, -160.0, -130.0, -100.0, -70.0, -45.0, -30.0, -15.0, 0.0):
+        zc = (z_mouth_center + k_bot * (-27.0 - xc)) if xc <= -27.0 else (
+             Z_BARU_CENTER + (z_mouth_center - Z_BARU_CENTER) * ((-xc / 27.0) ** 0.65) if xc < 0.0 else Z_BARU_CENTER)
+        nut_step = build_simulated_baru_nut(xc, 0.0, zc)
+        bb_step = nut_step.BoundBox
+        for obj in machine_features:
+            if bb_step.intersect(obj.Shape.BoundBox):
+                v = nut_step.common(obj.Shape).Volume
+                if v > tol_mm3:
+                    chute_cols.append((xc, obj.Name, v))
+
     set_pose(doc, TH2_PMI_DEG, recompute=True)
     pmi_other_cols = [(o.Name, baru_sh.common(o.Shape).Volume) for o in machine_features
                       if o.Name != "Navalha_Corte_SAE5160" and baru_sh.BoundBox.intersect(o.Shape.BoundBox)
@@ -1882,6 +2198,8 @@ def check_baru_simulation_poses(doc: App.Document, tol_mm3: float = 1e-4) -> dic
     return {
         "pms_clash_mm3": max((c[1] for c in pms_cols), default=0.0),
         "pms_collisions": pms_cols,
+        "chute_passage_max_clash_mm3": max((c[2] for c in chute_cols), default=0.0),
+        "chute_passage_collisions": chute_cols,
         "pmi_non_blade_clash_mm3": max((c[1] for c in pmi_other_cols), default=0.0),
         "pmi_non_blade_collisions": pmi_other_cols,
         "pmi_blade_cut_volume_mm3": cut_common.Volume,
@@ -1891,12 +2209,18 @@ def check_baru_simulation_poses(doc: App.Document, tol_mm3: float = 1e-4) -> dic
 
 def verify_and_export(doc: App.Document, primary_fcstd: str, primary_step: str,
                       mirror_fcstd: list[str], mirror_step: list[str]) -> dict:
-    # Verifica colisao booleana completa ao longo de 360° (incluindo rampa do came 60°..150°)
-    test_angles = [0.0, 60.0, 83.0, 106.0, 128.0, 150.0, 165.0, 220.0, 280.0, 345.0]
+    # Verifica colisao booleana completa ao longo de 360° em 12 poses (incluindo PMS 165°, PMI 345° e rampa do came 60°..150°)
+    test_angles = [0.0, 60.0, 83.0, 106.0, 128.0, 150.0, 165.0, 200.0, 255.0, 280.0, 315.0, 345.0]
     poses_report = {}
-    for ang in test_angles:
+    static_cols_pose0 = []
+    for idx, ang in enumerate(test_angles):
         k = set_pose(doc, ang, recompute=True)
-        cols = check_boolean_interference_all_pairs(doc)
+        if idx == 0:
+            cols = check_boolean_interference_all_pairs(doc, only_moving_pairs=False)
+            mov_names = {o.Name for o in doc.Objects if o.TypeId == "Part::Feature" and bool(getattr(o, "ExpressionEngine", []))}
+            static_cols_pose0 = [c for c in cols if c[0] not in mov_names and c[1] not in mov_names]
+        else:
+            cols = static_cols_pose0 + check_boolean_interference_all_pairs(doc, only_moving_pairs=True)
         poses_report[f"{ang:05.1f}deg"] = {
             "kinematics": k,
             "collisions": cols,
@@ -1919,7 +2243,11 @@ def verify_and_export(doc: App.Document, primary_fcstd: str, primary_step: str,
         shutil.copy2(primary_fcstd, dst)
 
     os.makedirs(os.path.dirname(primary_step), exist_ok=True)
-    Part.export(features, primary_step)
+    if App.GuiUp:
+        import ImportGui
+        ImportGui.export(subparts, primary_step)
+    else:
+        Part.export(features, primary_step)
     for dst in mirror_step:
         os.makedirs(os.path.dirname(dst), exist_ok=True)
         shutil.copy2(primary_step, dst)

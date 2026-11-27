@@ -76,18 +76,28 @@ Z_BASE_BOT = Z_WORK_DATUM + 2.00                   # 982.00 mm
 Z_BASE_TOP = Z_WORK_DATUM + 8.35                   # 988.35 mm (Chapa 1/4" = 6.35 mm)
 Z_STRUCT_BOT = Z_WORK_DATUM + 8.37                 # 988.37 mm
 
-# Suporte do Baru em Cantoneira comercial 1.1/2" x 3/16" a 45° (V 90°)
-Z_CANTONEIRA_V = Z_WORK_DATUM + 17.25              # 997.25 mm
+# Suporte do Baru em Cantoneira comercial 1.1/2" x 3/16" a 45° (V 90°) — elevado +6,00 mm (v9)
+Z_CANTONEIRA_V = Z_WORK_DATUM + 23.25              # 1003.25 mm (+6.00 mm sobre 997.25 mm)
 
-# Corpo de prova: Baru elipsoidal 50.0 (X) x 30.0 (Y) x 40.0 (Z) mm na Cantoneira 90°
+# Corpo de prova na orientação natural estável (deitado): 50.0 (X) x 40.0 (Y) x 30.0 (Z) mm na Cantoneira 90°
 BARU_LEN_X = 50.00
-BARU_WID_Y = 30.00
-BARU_DEP_Z = 40.00
+BARU_WID_Y = 40.00
+BARU_DEP_Z = 30.00
 _M_V90 = 1.0000
-_DZ_TANG_90 = math.hypot(0.5 * BARU_WID_Y * _M_V90, 0.5 * BARU_DEP_Z)  # 25.0000 mm
-Z_BARU_CENTER = Z_CANTONEIRA_V + _DZ_TANG_90       # 1022.2500 mm
-Z_BARU_BOT = Z_BARU_CENTER - 0.5 * BARU_DEP_Z      # 1002.2500 mm
-Z_BARU_TOP = Z_BARU_CENTER + 0.5 * BARU_DEP_Z      # 1042.2500 mm -> corte PMI = 4.7500 mm <= 5.00 mm!
+_DZ_TANG_90 = math.hypot(0.5 * BARU_WID_Y * _M_V90, 0.5 * BARU_DEP_Z) + 0.05  # 25.05 mm (folga tangente 0,05 mm)
+Z_BARU_CENTER = Z_CANTONEIRA_V + _DZ_TANG_90       # 1028.3000 mm (+6.05 mm sobre 1022.25 mm)
+Z_BARU_BOT = Z_BARU_CENTER - 0.5 * BARU_DEP_Z      # 1013.3000 mm
+Z_BARU_TOP = Z_BARU_CENTER + 0.5 * BARU_DEP_Z      # 1043.3000 mm -> corte PMI = 5.8000 mm!
+
+# Limitadores parafusados do curso da alavanca (2x Parafusos Sextavados M12x16 DIN 933 Cl. 8.8 no Pórtico Frontal)
+STOP_R_ALONG_L2 = 46.00
+STOP_HEX_S = 19.00                                 # Chave 19 mm (M12 DIN 933 / DIN 439B)
+STOP_BOLT_HOLE_D = 13.00                           # Furo passante ISO 273 H12 no pórtico frontal p/ M12
+STOP_OFFSET_NORM = 19.05 + 0.5 * STOP_HEX_S + 0.12 # 28.67 mm (folga 0,12 mm nos fins de curso 80° e 20°)
+STOP_PMS_X = O2_X + STOP_R_ALONG_L2 * math.cos(math.radians(TH2_PMS_DEG)) + STOP_OFFSET_NORM * math.cos(math.radians(170.0))
+STOP_PMS_Z = O2_Z + STOP_R_ALONG_L2 * math.sin(math.radians(TH2_PMS_DEG)) + STOP_OFFSET_NORM * math.sin(math.radians(170.0))
+STOP_PMI_X = O2_X + STOP_R_ALONG_L2 * math.cos(math.radians(TH2_PMI_DEG)) + STOP_OFFSET_NORM * math.cos(math.radians(-70.0))
+STOP_PMI_Z = O2_Z + STOP_R_ALONG_L2 * math.sin(math.radians(TH2_PMI_DEG)) + STOP_OFFSET_NORM * math.sin(math.radians(-70.0))
 
 # Comprimento ergonômico da Alavanca em L (arco varrido < alcance do braço humano)
 LEVER_TUBE_R1 = 480.00                             # Fim do tubo 1.1/4" (mm)
@@ -218,6 +228,61 @@ def make_oring_pin_y(x: float, z: float, d_pin: float, y_min: float, y_max: floa
     return pin_grooved, orings_sh
 
 
+def make_hex_prism_y(x: float, z: float, across_flats_s: float, y_min: float, y_max: float,
+                     normal_deg: float = 0.0, d_hole: float = 0.0) -> Part.Shape:
+    """Prisma sextavado comercial (cabeça/porca DIN 933/934/439B) ao longo de Y com face normal em normal_deg."""
+    r_circ = across_flats_s / math.sqrt(3.0)
+    a0 = math.radians(normal_deg - 30.0)
+    pts = [
+        App.Vector(x + r_circ * math.cos(a0 + k * math.pi / 3.0), y_min,
+                   z + r_circ * math.sin(a0 + k * math.pi / 3.0))
+        for k in range(6)
+    ]
+    pts.append(pts[0])
+    prism = Part.Face(Part.makePolygon(pts)).extrude(App.Vector(0.0, y_max - y_min, 0.0))
+    if d_hole > 0.0:
+        hole = Part.makeCylinder(0.5 * d_hole, (y_max - y_min) + 1.0,
+                                 App.Vector(x, y_min - 0.5, z), App.Vector(0.0, 1.0, 0.0))
+        prism = prism.cut(hole)
+    return prism.removeSplitter()
+
+
+def make_hex_prism_z(x: float, y: float, across_flats_s: float, z_min: float, z_max: float,
+                     d_hole: float = 0.0) -> Part.Shape:
+    """Prisma sextavado comercial ao longo de Z."""
+    r_circ = across_flats_s / math.sqrt(3.0)
+    pts = [
+        App.Vector(x + r_circ * math.cos(k * math.pi / 3.0),
+                   y + r_circ * math.sin(k * math.pi / 3.0), z_min)
+        for k in range(6)
+    ]
+    pts.append(pts[0])
+    prism = Part.Face(Part.makePolygon(pts)).extrude(App.Vector(0.0, 0.0, z_max - z_min))
+    if d_hole > 0.0:
+        hole = Part.makeCylinder(0.5 * d_hole, (z_max - z_min) + 1.0,
+                                 App.Vector(x, y, z_min - 0.5), App.Vector(0.0, 0.0, 1.0))
+        prism = prism.cut(hole)
+    return prism.removeSplitter()
+
+
+def make_hex_prism_x(y: float, z: float, across_flats_s: float, x_min: float, x_max: float,
+                     d_hole: float = 0.0) -> Part.Shape:
+    """Prisma sextavado comercial ao longo de X."""
+    r_circ = across_flats_s / math.sqrt(3.0)
+    pts = [
+        App.Vector(x_min, y + r_circ * math.cos(k * math.pi / 3.0),
+                   z + r_circ * math.sin(k * math.pi / 3.0))
+        for k in range(6)
+    ]
+    pts.append(pts[0])
+    prism = Part.Face(Part.makePolygon(pts)).extrude(App.Vector(x_max - x_min, 0.0, 0.0))
+    if d_hole > 0.0:
+        hole = Part.makeCylinder(0.5 * d_hole, (x_max - x_min) + 1.0,
+                                 App.Vector(x_min - 0.5, y, z), App.Vector(1.0, 0.0, 0.0))
+        prism = prism.cut(hole)
+    return prism.removeSplitter()
+
+
 def make_hollow_metalon_box(x0: float, y0: float, z0: float,
                             dx: float, dy: float, dz: float,
                             axis: str, wall: float = 1.50) -> Part.Shape:
@@ -256,9 +321,9 @@ def build_base_plate_with_drop_window() -> Part.Shape:
     for xs in (-16.0, 16.0):
         for ys in (-27.5, 27.5):
             cuts.append(Part.makeCylinder(3.15, 12.0, App.Vector(xs, ys, Z_BASE_BOT - 2.0), App.Vector(0, 0, 1)))
-    for xk in (-158.0, 158.0):
-        for yk in (-36.5, 43.5):
-            cuts.append(Part.makeCylinder(4.10, 12.0, App.Vector(xk, yk, Z_BASE_BOT - 2.0), App.Vector(0, 0, 1)))
+    for xk in (-135.0, 135.0):
+        for yk in (-36.50, 43.55):
+            cuts.append(Part.makeCylinder(4.30, 12.0, App.Vector(xk, yk, Z_BASE_BOT - 2.0), App.Vector(0, 0, 1)))
     return base.cut(cuts).removeSplitter()
 
 
@@ -279,12 +344,11 @@ def build_structural_portal(y_min: float, y_max: float, is_front: bool) -> Part.
     beam_O2 = Part.makeBox(240.80, dy, 50.80, App.Vector(-120.40, y_min, O2_Z - 25.40))
     parts = [col_L, col_R, beam_O4, beam_O2]
 
-    x_pms = O2_X + 44.0 * math.cos(math.radians(80.0)) + 26.15 * math.cos(math.radians(170.0))
-    z_pms = O2_Z + 44.0 * math.sin(math.radians(80.0)) + 26.15 * math.sin(math.radians(170.0))
-
     if is_front:
-        ear_pms_box = Part.makeBox(36.0, dy, z_pms - (O2_Z + 15.0), App.Vector(x_pms - 18.0, y_min, O2_Z + 15.0))
-        ear_pms_cyl = Part.makeCylinder(18.0, dy, App.Vector(x_pms, y_min, z_pms), App.Vector(0, 1, 0))
+        r_ear = 21.00
+        ear_pms_box = Part.makeBox(2.0 * r_ear, dy, STOP_PMS_Z - O2_Z,
+                                   App.Vector(STOP_PMS_X - r_ear, y_min, O2_Z))
+        ear_pms_cyl = Part.makeCylinder(r_ear, dy, App.Vector(STOP_PMS_X, y_min, STOP_PMS_Z), App.Vector(0, 1, 0))
         parts.extend([ear_pms_box, ear_pms_cyl])
     else:
         beam_G1 = Part.makeBox(240.80, dy, 46.00, App.Vector(-120.40, y_min, Z_WORK_DATUM + 127.50))
@@ -302,7 +366,12 @@ def build_structural_portal(y_min: float, y_max: float, is_front: bool) -> Part.
         for zt in (Z_WORK_DATUM + 232.5, Z_WORK_DATUM + 392.5):
             holes.append(Part.makeCylinder(5.10, dy + 2.0, App.Vector(xt, y_min - 1.0, zt), App.Vector(0, 1, 0)))
 
-    if not is_front:
+    if is_front:
+        # 2x Furos passantes Ø13,00 mm (ISO 273 H12) p/ parafusamento dos limitadores M12x16 (PMS 80° e PMI 20°)
+        for xs, zs in ((STOP_PMS_X, STOP_PMS_Z), (STOP_PMI_X, STOP_PMI_Z)):
+            holes.append(Part.makeCylinder(0.5 * STOP_BOLT_HOLE_D, dy + 2.0,
+                                           App.Vector(xs, y_min - 1.0, zs), App.Vector(0, 1, 0)))
+    else:
         for zc in (Z_WORK_DATUM + 53.0, Z_WORK_DATUM + 77.0):
             holes.append(Part.makeCylinder(4.10, dy + 2.0, App.Vector(-95.0, y_min - 1.0, zc), App.Vector(0, 1, 0)))
         # 4 furos M8 (Ø8,4 mm) nas travessas beam_G1/beam_G2 para fixacao parafusada da Guia em Chapa U
@@ -313,37 +382,41 @@ def build_structural_portal(y_min: float, y_max: float, is_front: bool) -> Part.
     return portal.cut(holes).removeSplitter()
 
 
-def build_portal_spacers_and_weld_stops() -> tuple[Part.Shape, Part.Shape]:
-    """Espaçadores transversais M10 e 2x pinos batentes soldados Ø10 mm (sem rosca/porca!)."""
+def build_portal_spacers_and_bolted_stops() -> tuple[Part.Shape, Part.Shape]:
+    """
+    Espaçadores transversais M10 e 2x Parafusos Sextavados Limitadores M12x16 DIN 933 Cl. 8.8
+    parafusados nos furos Ø13,0 mm do pórtico frontal (+ Arruela DIN 125 + Porca Baixa DIN 439B).
+    """
     sp_parts = []
     for xt in (-95.0, 95.0):
         for zt in (Z_WORK_DATUM + 232.5, Z_WORK_DATUM + 392.5):
             tube = make_bushing_y(xt, zt, 10.40, 22.00, -34.45, 23.98)
             bolt = Part.makeCylinder(4.95, 71.20, App.Vector(xt, -40.85, zt), App.Vector(0, 1, 0))
-            head = Part.makeCylinder(8.00, 4.00, App.Vector(xt, -44.85, zt), App.Vector(0, 1, 0))
-            nut = Part.makeCylinder(8.00, 5.00, App.Vector(xt, 30.35, zt), App.Vector(0, 1, 0))
+            head = make_hex_prism_y(xt, zt, 17.00, -45.65, -40.85, normal_deg=0.0)
+            nut = make_hex_prism_y(xt, zt, 17.00, 30.37, 36.77, normal_deg=0.0)
             sp_parts.extend([tube, bolt, head, nut])
     spacers_sh = sp_parts[0].fuse(sp_parts[1:]).removeSplitter()
 
-    x_pms = O2_X + 44.0 * math.cos(math.radians(80.0)) + 26.15 * math.cos(math.radians(170.0))
-    z_pms = O2_Z + 44.0 * math.sin(math.radians(80.0)) + 26.15 * math.sin(math.radians(170.0))
-    x_pmi = O2_X + 44.0 * math.cos(math.radians(20.0)) + 26.15 * math.cos(math.radians(-70.0))
-    z_pmi = O2_Z + 44.0 * math.sin(math.radians(20.0)) + 26.15 * math.sin(math.radians(-70.0))
-
     stops = []
-    for xs, zs in ((x_pms, z_pms), (x_pmi, z_pmi)):
-        # Pinos redondos Ø10 mm soldados diretamente na face interna do pórtico frontal (-34.45) c/ luva de borracha Ø14
-        pin = Part.makeCylinder(5.00, 8.95, App.Vector(xs, -34.45, zs), App.Vector(0, 1, 0))
-        sleeve = make_bushing_y(xs, zs, 10.10, 14.00, -34.40, -25.45)
-        stops.extend([pin, sleeve])
+    for xs, zs, norm_deg in ((STOP_PMS_X, STOP_PMS_Z, 170.0), (STOP_PMI_X, STOP_PMI_Z, -70.0)):
+        # Arruela fina M12 DIN 433 (Ø24 x 1,10 mm) atrás do pórtico, recuada de l2_bar (Y=-32,00)
+        washer = make_bushing_y(xs, zs, 12.10, 24.00, -34.45, -33.35)
+        # Cabeça sextavada M12 DIN 933 (s=19,0 mm, k=7,50 mm) em Y[-33.35, -25.85] -> limpa Pino_Eixo_B (Y=-25,60)!
+        hex_head = make_hex_prism_y(xs, zs, STOP_HEX_S, -33.35, -25.85, normal_deg=norm_deg)
+        # Haste cilíndrica M12x16 atravessando o furo Ø13,0 mm do Pórtico Frontal (Y in [-40.82, -34.47])
+        shank = Part.makeCylinder(5.95, 13.00, App.Vector(xs, -46.35, zs), App.Vector(0, 1, 0))
+        # Porca sextavada baixa M12 DIN 439B (s=19,0 mm, m=5,40 mm) travando na face frontal do pórtico
+        jam_nut = make_hex_prism_y(xs, zs, STOP_HEX_S, -46.24, -40.84, normal_deg=norm_deg)
+        stops.append(washer.fuse([hex_head, shank, jam_nut]).removeSplitter())
     stops_sh = stops[0].fuse(stops[1:]).removeSplitter()
     return spacers_sh, stops_sh
 
 
 def build_cantoneira_baru_support() -> Part.Shape:
     """
-    Suporte do Baru simplificado: Cantoneira comercial 1.1/2" x 3/16" orientada a 45° (V 90°)
-    com rasgo central 8 mm, 2 pés em chapa 3 mm parafusados M6 e 2 abas batentes baixas.
+    Suporte do Baru simplificado (+6,00 mm elevado p/ baru deitado 50x40x30 mm):
+    Cantoneira comercial 1.1/2" x 3/16" orientada a 45° (V 90°) com rasgo central 8 mm,
+    2 pés em chapa 3 mm alongados p/ assentar firmemente na mesa (Z_STRUCT_BOT) com 4x M6.
     """
     zv = Z_CANTONEIRA_V
     inv_sqrt2 = 1.0 / math.sqrt(2.0)
@@ -366,12 +439,13 @@ def build_cantoneira_baru_support() -> Part.Shape:
     ]
     cantoneira = Part.Face(Part.makePolygon(pts_v_yz)).extrude(App.Vector(52.0, 0.0, 0.0))
 
+    h_fl_vert = (z_out_bot + 19.5) - Z_STRUCT_BOT + 0.50  # 28.14 mm (acompanha os +6,0 mm do V)
     legs = []
     for sgn in (-1.0, 1.0):
         y_fl0 = 20.5 if sgn > 0 else -32.5
         fl_bot = Part.makeBox(44.0, 12.0, 3.00, App.Vector(-22.0, y_fl0, Z_STRUCT_BOT))
-        fl_vert = Part.makeBox(44.0, 3.0, 21.50, App.Vector(-22.0, 19.5 if sgn > 0 else -22.5, Z_STRUCT_BOT))
-        gus = Part.makeBox(44.0, 6.0, 9.0, App.Vector(-22.0, 13.5 if sgn > 0 else -19.5, zv + 6.0))
+        fl_vert = Part.makeBox(44.0, 3.0, h_fl_vert, App.Vector(-22.0, 19.5 if sgn > 0 else -22.5, Z_STRUCT_BOT))
+        gus = Part.makeBox(44.0, 4.5, 8.5, App.Vector(-22.0, 15.5 if sgn > 0 else -20.0, zv + 6.0))
         y_tab = 5.5 if sgn > 0 else -11.5
         stop_tab = Part.makeBox(3.50, 6.00, 8.00, App.Vector(22.50, y_tab, zv))
         legs.extend([fl_bot, fl_vert, gus, stop_tab])
@@ -585,6 +659,16 @@ def build_floor_stand_and_nr12_cabinet() -> tuple[Part.Shape, Part.Shape, Part.S
     for ym in (-36.50, 43.55):
         for zm in (1155.0, 1253.3):
             m_holes.append(Part.makeCylinder(3.05, 28.0, App.Vector(-174.0, ym, zm), App.Vector(1, 0, 0)))
+    # Furos M8 (Ø8,6 mm) de amarração vertical Estrutura Superior + Mesa 1/4" + Gabinete Inferior
+    for xk in (-135.0, 135.0):
+        for yk in (-36.50, 43.55):
+            m_holes.append(Part.makeCylinder(4.30, 56.0, App.Vector(xk, yk, z_top_stand - 2.0), App.Vector(0, 0, 1)))
+    # Furos M6 (Ø6,5 mm) p/ as 4x Cantoneiras c/ Mão Francesa de união Superior-Inferior
+    for sx in (-1.0, 1.0):
+        for yc in (-36.50, 43.55):
+            m_holes.append(Part.makeCylinder(3.25, 26.0, App.Vector(sx * 182.0, yc, z_top_stand - 2.0), App.Vector(0, 0, 1)))
+            x_h0 = -175.0 if sx < 0 else 147.0
+            m_holes.append(Part.makeCylinder(3.25, 28.0, App.Vector(x_h0, yc, 1016.0), App.Vector(1, 0, 0)))
     metalon_frame = metalon_frame.cut(m_holes).removeSplitter()
 
     # Sapatas de piso com 8 furos de chumbamento Ø10.5 mm
@@ -612,14 +696,20 @@ def build_floor_stand_and_nr12_cabinet() -> tuple[Part.Shape, Part.Shape, Part.S
             p_front_cuts.append(Part.makeCylinder(3.05, 6.0, App.Vector(xb, -50.0, zb), App.Vector(0, 1, 0)))
     panels.append(p_front_top.cut(p_front_cuts).removeSplitter())
     panels.append(Part.makeBox(340.0, 1.20, h_post, App.Vector(-170.0, 53.57, z_bot_cab)))
-    panels.append(Part.makeBox(1.20, 100.05, h_post, App.Vector(170.02, -46.50, z_bot_cab)))
+    p_right = Part.makeBox(1.20, 100.05, h_post, App.Vector(170.02, -46.50, z_bot_cab))
+    p_right_cuts = [Part.makeCylinder(3.30, 8.0, App.Vector(168.0, yc, 1016.0), App.Vector(1, 0, 0))
+                    for yc in (-36.50, 43.55)]
+    panels.append(p_right.cut(p_right_cuts).removeSplitter())
     p_left_top = Part.makeBox(1.20, 100.05, 386.50, App.Vector(-171.22, -46.50, Z_WORK_DATUM + 131.0))
     p_left_cuts = [
         Part.makeCylinder(3.05, 8.0, App.Vector(-174.0, ym, zm), App.Vector(1, 0, 0))
         for ym in (-36.50, 43.55) for zm in (1155.0, 1253.3)
     ]
     panels.append(p_left_top.cut(p_left_cuts).removeSplitter())
-    panels.append(Part.makeBox(1.20, 100.05, 51.63, App.Vector(-171.22, -46.50, z_bot_cab)))
+    p_left_bot = Part.makeBox(1.20, 100.05, 51.63, App.Vector(-171.22, -46.50, z_bot_cab))
+    p_left_bot_cuts = [Part.makeCylinder(3.30, 8.0, App.Vector(-174.0, yc, 1016.0), App.Vector(1, 0, 0))
+                       for yc in (-36.50, 43.55)]
+    panels.append(p_left_bot.cut(p_left_bot_cuts).removeSplitter())
     panels.append(Part.makeBox(340.0, 100.05, 1.20, App.Vector(-170.0, -46.50, z_top_cab + 0.02)))
     sheet_panels = panels[0].fuse(panels[1:]).removeSplitter()
 
@@ -630,24 +720,24 @@ def build_floor_stand_and_nr12_cabinet() -> tuple[Part.Shape, Part.Shape, Part.S
               for zb in (Z_WORK_DATUM + 45.0, Z_WORK_DATUM + 155.0, Z_WORK_DATUM + 257.5)]
     poly_window = poly_window.cut(v_cuts).removeSplitter()
 
-    # Calha de Alimentação Segura NR-12 (42x48 mm)
+    # Calha de Alimentação Segura NR-12 (boca direita elevada +12 mm p/ entrega suave do baru deitado 50x40x30 mm)
     pts_chute_out = [
         App.Vector(-215.0, -22.50, Z_WORK_DATUM + 78.50),
-        App.Vector(-27.0,  -22.50, Z_WORK_DATUM + 21.00),
-        App.Vector(-27.0,  -22.50, Z_WORK_DATUM + 72.00),
+        App.Vector(-27.0,  -22.50, Z_WORK_DATUM + 33.00),
+        App.Vector(-27.0,  -22.50, Z_WORK_DATUM + 76.00),
         App.Vector(-215.0, -22.50, Z_WORK_DATUM + 129.50),
         App.Vector(-215.0, -22.50, Z_WORK_DATUM + 78.50),
     ]
     chute_outer = Part.Face(Part.makePolygon(pts_chute_out)).extrude(App.Vector(0.0, 45.0, 0.0))
-    k_bot = (80.00 - 22.50) / 188.0
-    k_top = (128.00 - 70.50) / 188.0
+    k_bot = (80.00 - 34.50) / 188.0
+    k_top = (128.00 - 74.50) / 188.0
     x_in_L, x_in_R = -216.0, -26.0
     pts_tunnel_in = [
-        App.Vector(x_in_L, -21.00, Z_WORK_DATUM + 22.50 + k_bot * (-27.0 - x_in_L)),
-        App.Vector(x_in_R, -21.00, Z_WORK_DATUM + 22.50 + k_bot * (-27.0 - x_in_R)),
-        App.Vector(x_in_R, -21.00, Z_WORK_DATUM + 70.50 + k_top * (-27.0 - x_in_R)),
-        App.Vector(x_in_L, -21.00, Z_WORK_DATUM + 70.50 + k_top * (-27.0 - x_in_L)),
-        App.Vector(x_in_L, -21.00, Z_WORK_DATUM + 22.50 + k_bot * (-27.0 - x_in_L)),
+        App.Vector(x_in_L, -21.00, Z_WORK_DATUM + 34.50 + k_bot * (-27.0 - x_in_L)),
+        App.Vector(x_in_R, -21.00, Z_WORK_DATUM + 34.50 + k_bot * (-27.0 - x_in_R)),
+        App.Vector(x_in_R, -21.00, Z_WORK_DATUM + 74.50 + k_top * (-27.0 - x_in_R)),
+        App.Vector(x_in_L, -21.00, Z_WORK_DATUM + 74.50 + k_top * (-27.0 - x_in_L)),
+        App.Vector(x_in_L, -21.00, Z_WORK_DATUM + 34.50 + k_bot * (-27.0 - x_in_L)),
     ]
     chute = chute_outer.cut(Part.Face(Part.makePolygon(pts_tunnel_in)).extrude(App.Vector(0.0, 42.0, 0.0))).removeSplitter()
     fl_portal = Part.makeBox(34.0, 1.48, 44.0, App.Vector(-112.0, 22.50, Z_WORK_DATUM + 43.0))
@@ -777,6 +867,122 @@ def build_feeding_hopper_reservoir() -> Part.Shape:
     return hopper.cut(h_cuts).removeSplitter()
 
 
+def build_upper_to_lower_gussets_and_bolts() -> tuple[Part.Shape, Part.Shape]:
+    """
+    Conjunto estrutural de amarração da Estrutura Superior ao Gabinete/Cavalete Inferior:
+      1. 4x Cantoneiras c/ Mão Francesa Dupla Dobrada em Chapa #11 (3,00 mm, ABNT 1020) nos 4 montantes
+         (Y = -36,50 e +43,55, X = ±171,26..±189,80, Z = 982,04..1036,00 mm), parafusadas com 8x M6x30 Cl. 8.8.
+      2. 8x Mãos Francesas Triangulares (70x70x4,76 mm Chapa 3/16", c/ alívio de canto 12 mm p/ cordão de solda)
+         contraventando as 4 colunas principais do gabinete inferior nos planos YZ e XZ (Z = 891,96..961,96 mm).
+      3. 4x Parafusos Sextavados Estruturais M8x55 DIN 933 Cl. 8.8 (X = ±135,0; Y = -36,50 e +43,55)
+         atravessando e comprimindo solidariamente Quadro Superior + Mesa 1/4" + Travessas do Gabinete Inferior!
+    """
+    brackets_and_gussets = []
+    fasteners = []
+    t_b = 3.00
+
+    # 1. 4x Cantoneiras dobradas em U com duas mãos francesas laterais + 8x Parafusos M6x30
+    for sx in (-1.0, 1.0):
+        for yc in (-36.50, 43.55):
+            y0, y1 = yc - 14.00, yc + 14.00
+            x_in = sx * 171.26
+            x_v_out = sx * (171.26 + t_b)
+            x_h_out = sx * 189.80
+            z_b0 = Z_BASE_BOT + 0.04            # 982.04 mm
+            z_h1 = z_b0 + t_b                   # 985.04 mm
+            z_v1 = 1036.00                      # 9 mm abaixo das abas da calha (1045 mm)
+
+            xv_min, xv_max = min(x_in, x_v_out), max(x_in, x_v_out)
+            xh_min, xh_max = min(x_in, x_h_out), max(x_in, x_h_out)
+            fl_vert = Part.makeBox(xv_max - xv_min, 28.00, z_v1 - z_b0, App.Vector(xv_min, y0, z_b0))
+            fl_horz = Part.makeBox(xh_max - xh_min, 28.00, t_b, App.Vector(xh_min, y0, z_b0))
+
+            tri_pts_1 = [
+                App.Vector(x_v_out, y0, z_h1),
+                App.Vector(x_h_out, y0, z_h1),
+                App.Vector(x_v_out, y0, z_v1),
+                App.Vector(x_v_out, y0, z_h1),
+            ]
+            cheek_L = Part.Face(Part.makePolygon(tri_pts_1)).extrude(App.Vector(0.0, t_b, 0.0))
+            cheek_R = cheek_L.copy()
+            cheek_R.translate(App.Vector(0.0, 28.00 - t_b, 0.0))
+
+            brk = fl_vert.fuse([fl_horz, cheek_L, cheek_R]).removeSplitter()
+            holes_b = [
+                Part.makeCylinder(3.30, 12.0, App.Vector(sx * 182.0, yc, z_b0 - 2.0), App.Vector(0, 0, 1)),
+                Part.makeCylinder(3.30, 12.0, App.Vector(min(x_in, x_v_out) - 2.0, yc, 1016.0), App.Vector(1, 0, 0)),
+            ]
+            brackets_and_gussets.append(brk.cut(holes_b).removeSplitter())
+
+            # Parafuso vertical M6x30 DIN 933 + porca sob a longarina Metalon 20x20 (Z in [962, 982])
+            xb_v = sx * 182.0
+            sh_v = Part.makeCylinder(2.95, 29.0, App.Vector(xb_v, yc, 956.5), App.Vector(0, 0, 1))
+            hd_v = make_hex_prism_z(xb_v, yc, 10.0, z_h1 + 0.02, z_h1 + 4.02)
+            nt_v = make_hex_prism_z(xb_v, yc, 10.0, 956.98, 961.98)
+            fasteners.append(sh_v.fuse([hd_v, nt_v]).removeSplitter())
+
+            # Parafuso horizontal M6x30 DIN 933 + porca atravessando montante superior (|X| in [150, 170])
+            if sx < 0:
+                sh_h = Part.makeCylinder(2.95, 30.0, App.Vector(-174.5, yc, 1016.0), App.Vector(1, 0, 0))
+                hd_h = make_hex_prism_x(yc, 1016.0, 10.0, -178.28, -174.28)
+                nt_h = make_hex_prism_x(yc, 1016.0, 10.0, -149.98, -144.98)
+            else:
+                sh_h = Part.makeCylinder(2.95, 30.0, App.Vector(144.5, yc, 1016.0), App.Vector(1, 0, 0))
+                hd_h = make_hex_prism_x(yc, 1016.0, 10.0, 174.28, 178.28)
+                nt_h = make_hex_prism_x(yc, 1016.0, 10.0, 144.98, 149.98)
+            fasteners.append(sh_h.fuse([hd_h, nt_h]).removeSplitter())
+
+    # 2. 8x Mãos Francesas Triangulares (60x60x4,76 mm) nos 4 cantos superiores das colunas do gabinete inferior
+    t_g = 4.76
+    z_g_top = Z_BASE_BOT - 20.04  # 961.96 mm (face inferior das travessas superiores do cavalete)
+    for sx in (-1.0, 1.0):
+        xc_col = sx * 180.0
+        for sy in (-1.0, 1.0):
+            # Mão francesa no plano YZ (entre coluna Y=±115 e longarina lateral Z=962, livre da porca M6 em Y=+43,55!)
+            y_c_in = sy * 114.96
+            y_tip = sy * (114.96 - 60.0)
+            pts_yz = [
+                App.Vector(xc_col - 0.5 * t_g, y_c_in - sy * 12.0, z_g_top),
+                App.Vector(xc_col - 0.5 * t_g, y_tip, z_g_top),
+                App.Vector(xc_col - 0.5 * t_g, y_c_in, z_g_top - 60.0),
+                App.Vector(xc_col - 0.5 * t_g, y_c_in, z_g_top - 12.0),
+                App.Vector(xc_col - 0.5 * t_g, y_c_in - sy * 12.0, z_g_top),
+            ]
+            brackets_and_gussets.append(Part.Face(Part.makePolygon(pts_yz)).extrude(App.Vector(t_g, 0.0, 0.0)))
+
+            # Mão francesa no plano XZ (entre coluna X=±170 e travessa frontal/traseira Y=±125, Z=962)
+            yc_beam = sy * 125.0
+            x_c_in = sx * 169.96
+            x_tip = sx * (169.96 - 65.0)
+            pts_xz = [
+                App.Vector(x_c_in - sx * 12.0, yc_beam - 0.5 * t_g, z_g_top),
+                App.Vector(x_tip, yc_beam - 0.5 * t_g, z_g_top),
+                App.Vector(x_c_in, yc_beam - 0.5 * t_g, z_g_top - 65.0),
+                App.Vector(x_c_in, yc_beam - 0.5 * t_g, z_g_top - 12.0),
+                App.Vector(x_c_in - sx * 12.0, yc_beam - 0.5 * t_g, z_g_top),
+            ]
+            brackets_and_gussets.append(Part.Face(Part.makePolygon(pts_xz)).extrude(App.Vector(0.0, t_g, 0.0)))
+
+    # 3. 4x Parafusos Sextavados M8x55 DIN 933 Cl. 8.8 unindo Quadro Superior + Mesa 1/4" + Gabinete Inferior
+    z_rail_up_top = Z_STRUCT_BOT + 20.00  # 1008.37 mm
+    for xk in (-135.0, 135.0):
+        for yk in (-36.50, 43.55):
+            w_top = Part.makeCylinder(8.0, 1.60, App.Vector(xk, yk, z_rail_up_top + 0.02), App.Vector(0, 0, 1)).cut(
+                Part.makeCylinder(4.20, 3.0, App.Vector(xk, yk, z_rail_up_top - 0.5), App.Vector(0, 0, 1))
+            )
+            hd_m8 = make_hex_prism_z(xk, yk, 13.0, z_rail_up_top + 1.62, z_rail_up_top + 6.92)
+            sh_m8 = Part.makeCylinder(3.95, 55.50, App.Vector(xk, yk, 954.50), App.Vector(0, 0, 1))
+            w_bot = Part.makeCylinder(8.0, 1.60, App.Vector(xk, yk, 960.38), App.Vector(0, 0, 1)).cut(
+                Part.makeCylinder(4.20, 3.0, App.Vector(xk, yk, 959.8), App.Vector(0, 0, 1))
+            )
+            nt_m8 = make_hex_prism_z(xk, yk, 13.0, 953.88, 960.38)
+            fasteners.append(w_top.fuse([hd_m8, sh_m8, w_bot, nt_m8]).removeSplitter())
+
+    gussets_sh = brackets_and_gussets[0].fuse(brackets_and_gussets[1:]).removeSplitter()
+    bolts_sh = fasteners[0].fuse(fasteners[1:]).removeSplitter()
+    return gussets_sh, bolts_sh
+
+
 def build_pedal_extraction_system_local() -> dict[str, Part.Shape]:
     """
     Sistema de pedal 4-barras coplanar no plano XZ (alinhado com a alavanca +X, APENAS furos redondos!):
@@ -790,9 +996,9 @@ def build_pedal_extraction_system_local() -> dict[str, Part.Shape]:
     shaft_ext = Part.makeCylinder(3.95, 56.0, App.Vector(O_EXT_X, -28.0, O_EXT_Z), App.Vector(0, 1, 0))
     stator_ext = ear_F.fuse([ear_B, shaft_ext]).removeSplitter()
 
-    # Alavanca Ejetora (local em O_ext = (34.0, 0, 996.0))
+    # Alavanca Ejetora (local em O_ext = (34.0, 0, 996.0); pá elevada +6 mm acompanhando a cantoneira/baru)
     hub_mid = Part.makeCylinder(6.50, 7.0, App.Vector(0.0, -3.5, 0.0), App.Vector(0, 1, 0))
-    paddle = Part.makeBox(51.5, 6.0, 6.5, App.Vector(-51.5, -3.0, -4.5))
+    paddle = Part.makeBox(51.5, 6.0, 12.5, App.Vector(-51.5, -3.0, -4.5))
     hub_crank = Part.makeCylinder(6.40, 25.0, App.Vector(0.0, -1.0, 0.0), App.Vector(0, 1, 0))
     riser = make_rounded_bar_xz(26.0, 10.0, 19.8, 23.5)
     riser.rotate(App.Vector(0, 0, 0), App.Vector(0, 1, 0), -90.0)
@@ -1041,14 +1247,26 @@ def set_pose(doc: App.Document, theta2_deg: float, ext_ang_deg: float = 0.0, rec
 # =========================================================================================
 # 5. MONTAGEM COMPLETA DO DOCUMENTO FREECAD (prensa_baru_manual_v1 — REVISÃO V7)
 # =========================================================================================
+_VISUAL_STYLE_REGISTRY: dict[str, tuple[tuple[float, float, float], int]] = {}
+
+
 def apply_visual_style(obj, rgb: tuple[float, float, float], transparency: int = 0) -> None:
-    """Aplica Visibilidade, DisplayMode, cor e transparência na GUI do FreeCAD."""
+    """Aplica Visibilidade, DisplayMode, ShapeColor, ShapeAppearance (brilho metálico) e transparência na GUI."""
+    _VISUAL_STYLE_REGISTRY[obj.Name] = (rgb, int(transparency))
     try:
         if App.GuiUp and hasattr(obj, "ViewObject") and obj.ViewObject:
             vo = obj.ViewObject
             vo.Visibility = True
             vo.ShapeColor = rgb
             vo.Transparency = int(transparency)
+            if hasattr(vo, "ShapeAppearance") and vo.ShapeAppearance:
+                mat_ap = App.Material()
+                mat_ap.DiffuseColor = (*rgb, 0.0)
+                mat_ap.AmbientColor = (rgb[0] * 0.35, rgb[1] * 0.35, rgb[2] * 0.35, 0.0)
+                mat_ap.SpecularColor = (0.75, 0.78, 0.82, 0.0) if transparency == 0 else (0.92, 0.96, 1.0, 0.0)
+                mat_ap.Shininess = 0.72 if transparency == 0 else 0.90
+                mat_ap.Transparency = float(transparency) / 100.0
+                vo.ShapeAppearance = (mat_ap,)
             if hasattr(vo, "DisplayMode") and "Flat Lines" in vo.listDisplayModes():
                 vo.DisplayMode = "Flat Lines"
             if hasattr(vo, "LineColor"):
@@ -1057,6 +1275,14 @@ def apply_visual_style(obj, rgb: tuple[float, float, float], transparency: int =
                 vo.LineWidth = 1.5
     except Exception:
         pass
+
+
+def reapply_all_visual_styles(doc: App.Document) -> None:
+    """Reaplica cores e transparências após ShapeMaterial (evitando sobrescrita cinza do cartão .FCMat)."""
+    for obj in doc.Objects:
+        if obj.Name in _VISUAL_STYLE_REGISTRY:
+            rgb, tr = _VISUAL_STYLE_REGISTRY[obj.Name]
+            apply_visual_style(obj, rgb, tr)
 
 
 def configure_all_gui_view_providers(doc: App.Document) -> None:
@@ -1170,7 +1396,7 @@ PART_MATERIAL_ASSIGNMENTS = {
     "Portico_Estrutural_Traseiro": "Aco_ABNT_1020",
     "Portico_Estrutural_Frontal": "Aco_ABNT_1020",
     "Espacadores_Transversais_Portico": "Aco_SAE_1045",
-    "Batentes_Pinos_Soldados_PMS_PMI": "Aco_ABNT_1020",
+    "Parafusos_Limitadores_Curso_M12": "Aco_SAE_1045",
     "Suporte_Baru_Cantoneira": "Aco_ABNT_1020",
     "Guia_Pistao_Chapa_U": "Aco_ABNT_1020",
     "Parafusos_Guia_Pistao_M8": "Aco_SAE_1045",
@@ -1198,6 +1424,8 @@ PART_MATERIAL_ASSIGNMENTS = {
     "Pino_Eixo_O5": "Aco_SAE_1045",
     "Aneis_Retencao_ORing_O5": "Borracha_NBR_70",
     "Quadro_Tubular_Metalon_20x20": "Aco_ABNT_1020",
+    "Cantoneiras_Maos_Francesas_Uniao": "Aco_ABNT_1020",
+    "Parafusos_Uniao_Gabinete_M8": "Aco_SAE_1045",
     "Sapatas_Ancoragem_Piso": "Aco_ABNT_1020",
     "Carenagem_Chapa_Galvanizada": "Aco_ABNT_1020",
     "Visor_Policarbonato_NR12": "Policarbonato_NR12",
@@ -1313,7 +1541,7 @@ def build_prensa_baru_manual_v1(initial_theta2_deg: float = TH2_MID_DEG) -> App.
     base_sh = build_base_plate_with_drop_window()
     portal_rear_sh = build_structural_portal(24.00, 30.35, is_front=False)
     portal_front_sh = build_structural_portal(-40.82, -34.47, is_front=True)
-    spacers_sh, stops_sh = build_portal_spacers_and_weld_stops()
+    spacers_sh, stops_sh = build_portal_spacers_and_bolted_stops()
     cantoneira_sh = build_cantoneira_baru_support()
     guide_u_sh, uhmw_guide_sh, u_bolts_sh = build_bolted_u_guide_and_uhmw()
 
@@ -1331,18 +1559,20 @@ def build_prensa_baru_manual_v1(initial_theta2_deg: float = TH2_MID_DEG) -> App.
         make_bushing_y(O4_X, O4_Z, 12.10, 19.00, 30.40, 32.00),
     ]).removeSplitter()
 
+    C_BOLT_ZINC_88 = (0.86, 0.70, 0.24)
     add_part_feature(doc, sub01, "Chapa_Base_Estrutural",
-                     "Chapa de Mesa Estrutural 1/4 pol (340x100 mm - Porticos Soldados s/ Cantoneiras)", base_sh, C_BASE_PLATE)
+                     "Chapa de Mesa Estrutural 1/4 pol (340x100 mm - 4x M8 no Gabinete)", base_sh, C_BASE_PLATE)
     add_part_feature(doc, sub01, "Portico_Estrutural_Traseiro",
                      "Portico Traseiro Soldado (Barra Chata 2x1/4 pol - 4 Furos M8 Guia U)", portal_rear_sh, C_STEEL_STRUCT)
     add_part_feature(doc, sub01, "Portico_Estrutural_Frontal",
-                     "Portico Frontal Soldado (Barra Chata 2x1/4 pol - Y[-40.82,-34.47])", portal_front_sh, C_STEEL_STRUCT)
+                     "Portico Frontal Soldado (Barra Chata 2x1/4 pol - 2 Furos Ø13.0 Limitadores M12)", portal_front_sh, C_STEEL_STRUCT)
     add_part_feature(doc, sub01, "Espacadores_Transversais_Portico",
-                     "4x Espacadores Tubulares c/ Parafusos M10 Cl. 8.8", spacers_sh, C_PIN_1045)
-    add_part_feature(doc, sub01, "Batentes_Pinos_Soldados_PMS_PMI",
-                     "2x Pinos Batentes Soldados D10 mm c/ Luva de Borracha (PMS 80 e PMI 20)", stops_sh, C_STOP_BUMPER)
+                     "4x Espacadores Tubulares c/ Parafusos Sextavados M10 Cl. 8.8", spacers_sh, C_PIN_1045)
+    add_part_feature(doc, sub01, "Parafusos_Limitadores_Curso_M12",
+                     "2x Parafusos Limitadores Sextavados M12x16 DIN 933 Cl. 8.8 + Arruela DIN 125 + Porca Baixa DIN 439B",
+                     stops_sh, C_BOLT_ZINC_88)
     add_part_feature(doc, sub01, "Suporte_Baru_Cantoneira",
-                     "Suporte em Cantoneira Comercial 1.1/2x3/16 (V 90 graus, s/ Usinagem) + Pes Dobrados", cantoneira_sh, C_CANTONEIRA)
+                     "Suporte Cantoneira Comercial 1.1/2x3/16 (+6 mm Elevado, V 90 graus) + Pes Dobrados", cantoneira_sh, C_CANTONEIRA)
     add_part_feature(doc, sub01, "Guia_Pistao_Chapa_U",
                      "Guia Linear em Chapa Dobrada em U (3.0 mm) Parafusavel c/ 4 Furos M8", guide_u_sh, C_STEEL_STRUCT)
     add_part_feature(doc, sub01, "Parafusos_Guia_Pistao_M8",
@@ -1466,6 +1696,7 @@ def build_prensa_baru_manual_v1(initial_theta2_deg: float = TH2_MID_DEG) -> App.
     sub07.Label = "07_Cavalete_1500mm_Moega_Alimentacao_Reservatorio_e_Pedal_Estendido"
 
     metalon_sh, panels_sh, poly_sh, chute_sh, feet_sh, cab_bolts_sh = build_floor_stand_and_nr12_cabinet()
+    gussets_uniao_sh, bolts_uniao_sh = build_upper_to_lower_gussets_and_bolts()
     discharge_sh, reservoir_sh = build_sheet_metal_chute_and_reservoir()
     feed_hopper_sh = build_feeding_hopper_reservoir()
     ped_parts = build_pedal_extraction_system_local()
@@ -1473,6 +1704,12 @@ def build_prensa_baru_manual_v1(initial_theta2_deg: float = TH2_MID_DEG) -> App.
     add_part_feature(doc, sub07, "Quadro_Tubular_Metalon_20x20",
                      "Cavalete de Piso 1,50 m + Gabinete NR-12 (Metalon 20x20x1.50 mm - Z[4.76,1497.5])",
                      metalon_sh, C_METALON)
+    add_part_feature(doc, sub07, "Cantoneiras_Maos_Francesas_Uniao",
+                     "4x Cantoneiras Dobradas c/ Mao Francesa (#11 3.0 mm) + 8x Maos Francesas Cavalete (3/16 pol)",
+                     gussets_uniao_sh, C_STEEL_STRUCT)
+    add_part_feature(doc, sub07, "Parafusos_Uniao_Gabinete_M8",
+                     "4x Parafusos M8x55 (Mesa-Gabinete) + 8x Parafusos M6x30 Cl. 8.8 das Cantoneiras-Mao-Francesa",
+                     bolts_uniao_sh, C_BOLT_ZINC_88)
     add_part_feature(doc, sub07, "Sapatas_Ancoragem_Piso",
                      "4x Sapatas de Piso 70x70x4.76 mm c/ 8 Furos Ø10.5 mm p/ Chumbadores (Z[0,4.76])",
                      feet_sh, C_BASE_PLATE)
@@ -1513,13 +1750,13 @@ def build_prensa_baru_manual_v1(initial_theta2_deg: float = TH2_MID_DEG) -> App.
                      ped_parts["spring"], C_CIRCLIP)
 
     # -------------------------------------------------------------------------------------
-    # SUBCONJUNTO 08: Baru Simulado 30x50x40 mm
+    # SUBCONJUNTO 08: Baru Simulado 50(X)x40(Y)x30(Z) mm (Orientação Deitada Correta, +6 mm)
     # -------------------------------------------------------------------------------------
     sub08 = doc.addObject("App::Part", "Subconjunto_08_Simulacao_Baru")
-    sub08.Label = "08_Corpo_Prova_Baru_Simulado_30x50x40 (Corte Seletivo <= 5.0 mm)"
+    sub08.Label = "08_Corpo_Prova_Baru_Simulado_50x40x30 (Orientacao Deitada Correta, Corte PMI = 5.75 mm)"
     baru_sh = build_simulated_baru_nut(0.0, 0.0, Z_BARU_CENTER)
     add_part_feature(doc, sub08, "Baru_Simulado_30x50x40",
-                     "Baru Simulado 30(Y)x50(X)x40(Z) mm na Cantoneira V 90 graus (Corte PMI = 4.75 mm)",
+                     "Baru Simulado 50(X)x40(Y)x30(Z) mm na Cantoneira V 90 graus (+6 mm Elevado, Corte PMI = 5.75 mm)",
                      baru_sh, C_BARU_NUT, transparency=35)
 
     # -------------------------------------------------------------------------------------
@@ -1556,6 +1793,7 @@ def build_prensa_baru_manual_v1(initial_theta2_deg: float = TH2_MID_DEG) -> App.
     bind_native_kinematic_expressions(doc, ctrl)
     set_pose(doc, initial_theta2_deg, ext_ang_deg=0.0, recompute=True)
     assign_native_freecad_materials(doc)
+    reapply_all_visual_styles(doc)
     configure_all_gui_view_providers(doc)
     return doc
 
@@ -1621,11 +1859,13 @@ def check_baru_30x50x40_simulation(doc: App.Document, tol_mm3: float = 1e-4) -> 
     pms_cols = [(o.Name, baru_sh.common(o.Shape).Volume) for o in machine_features
                 if baru_sh.BoundBox.intersect(o.Shape.BoundBox) and baru_sh.common(o.Shape).Volume > tol_mm3]
 
-    k_bot = (80.00 - 22.50) / 188.0
+    k_bot = (80.00 - 34.50) / 188.0
+    dz_slope_tang = math.hypot(0.5 * BARU_LEN_X * k_bot, 0.5 * BARU_DEP_Z) + 0.35  # 16.52 mm tangente à rampa
+    z_mouth_center = Z_WORK_DATUM + 34.50 + dz_slope_tang                           # 1031.02 mm
     chute_cols = []
     for xc in (-190.0, -160.0, -130.0, -100.0, -70.0, -45.0, -30.0, -15.0, 0.0):
-        zc = (Z_WORK_DATUM + 44.50 + k_bot * (-27.0 - xc)) if xc <= -27.0 else (
-             Z_BARU_CENTER + (Z_WORK_DATUM + 44.50 - Z_BARU_CENTER) * (-xc / 27.0) if xc < 0.0 else Z_BARU_CENTER)
+        zc = (z_mouth_center + k_bot * (-27.0 - xc)) if xc <= -27.0 else (
+             Z_BARU_CENTER + (z_mouth_center - Z_BARU_CENTER) * ((-xc / 27.0) ** 0.65) if xc < 0.0 else Z_BARU_CENTER)
         nut_step = build_simulated_baru_nut(xc, 0.0, zc)
         bb_step = nut_step.BoundBox
         for obj in machine_features:
@@ -1636,7 +1876,8 @@ def check_baru_30x50x40_simulation(doc: App.Document, tol_mm3: float = 1e-4) -> 
 
     set_pose(doc, TH2_MID_DEG, ext_ang_deg=0.0, recompute=True)
     mid_cols = [(o.Name, baru_sh.common(o.Shape).Volume) for o in machine_features
-                if baru_sh.BoundBox.intersect(o.Shape.BoundBox) and baru_sh.common(o.Shape).Volume > tol_mm3]
+                if o.Name != "Navalha_Corte_SAE5160" and baru_sh.BoundBox.intersect(o.Shape.BoundBox)
+                and baru_sh.common(o.Shape).Volume > tol_mm3]
 
     set_pose(doc, TH2_PMI_DEG, ext_ang_deg=0.0, recompute=True)
     pmi_other_cols = [(o.Name, baru_sh.common(o.Shape).Volume) for o in machine_features
@@ -1713,13 +1954,14 @@ def verify_and_export(doc: App.Document, primary_fcstd: str, primary_step: str,
     set_pose(doc, TH2_PMS_DEG, ext_ang_deg=0.0, recompute=True)
     blade_pms_zmin = doc.getObject("Navalha_Corte_SAE5160").Shape.BoundBox.ZMin
     report["feeder_clearance_pms"] = {
-        "z_chute_exit_top_out_mm": Z_WORK_DATUM + 72.00,
+        "z_chute_exit_top_out_mm": Z_WORK_DATUM + 76.00,
         "z_blade_tip_pms_mm": blade_pms_zmin,
-        "blade_above_chute_roof_mm": blade_pms_zmin - (Z_WORK_DATUM + 72.00),
+        "blade_above_chute_roof_mm": blade_pms_zmin - (Z_WORK_DATUM + 76.00),
         "blade_above_baru_top_mm": blade_pms_zmin - Z_BARU_TOP,
     }
 
     set_pose(doc, TH2_MID_DEG, ext_ang_deg=0.0, recompute=True)
+    reapply_all_visual_styles(doc)
     configure_all_gui_view_providers(doc)
 
     features = [o for o in doc.Objects if o.TypeId == "Part::Feature"]
@@ -1755,7 +1997,11 @@ def verify_and_export(doc: App.Document, primary_fcstd: str, primary_step: str,
         shutil.copy2(primary_fcstd, dst)
 
     os.makedirs(os.path.dirname(primary_step), exist_ok=True)
-    Part.export(features, primary_step)
+    if App.GuiUp:
+        import ImportGui
+        ImportGui.export(subparts, primary_step)
+    else:
+        Part.export(features, primary_step)
     for dst in mirror_step:
         os.makedirs(os.path.dirname(dst), exist_ok=True)
         shutil.copy2(primary_step, dst)

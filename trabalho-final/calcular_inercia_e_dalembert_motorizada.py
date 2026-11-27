@@ -55,10 +55,13 @@ OBJ_CATALOG = {
     "Buchas_Catalogo_Estator": ("bronze", "Sub01_Estator"),
     "Pino_Eixo_O4": ("aco", "Sub01_Estator"),
     "Aneis_Retencao_ORing_O4": ("borracha", "Sub01_Estator"),
-    # Corpo 2 - Eixo O2 + Manivela L2 + Came Extrator + Pino A
+    # Corpo 2 - Eixo O2 + Manivela L2 + Parafuso M6 + Came Aliviado + Contrapeso O2 + Pino A
     "Eixo_Principal_O2_20rpm": ("aco", "Corpo2_O2"),
     "Elo2_Manivela_L2": ("aco", "Corpo2_O2"),
+    "Parafuso_Fixacao_Manivela_M6": ("aco", "Corpo2_O2"),
     "Came_Extrator_O2": ("aco", "Corpo2_O2"),
+    "Contrapeso_Balanceamento_O2": ("aco", "Corpo2_O2"),
+    "Parafusos_Contrapeso_M6": ("aco", "Corpo2_O2"),
     "Buchas_Catalogo_A": ("bronze", "Corpo2_O2"),
     "Pino_Eixo_A": ("aco", "Corpo2_O2"),
     "Aneis_Retencao_ORing_A": ("borracha", "Corpo2_O2"),
@@ -92,6 +95,8 @@ OBJ_CATALOG = {
     "Base_Tensora_Motor": ("aco", "Sub07_Trem_Potencia"),
     # Sub08 - Cavalete NR-12, Moega, Coletor e Extrator Automático por Came
     "Quadro_Tubular_Metalon_20x20": ("aco", "Sub08_Cavalete_Gabinete"),
+    "Cantoneiras_Maos_Francesas_Uniao": ("aco", "Sub08_Cavalete_Gabinete"),
+    "Parafusos_Uniao_Gabinete_M8": ("aco", "Sub08_Cavalete_Gabinete"),
     "Sapatas_Ancoragem_Piso": ("aco", "Sub08_Cavalete_Gabinete"),
     "Carenagem_Chapa_Galvanizada": ("aco", "Sub08_Cavalete_Gabinete"),
     "Visor_Policarbonato_NR12": ("pc", "Sub08_Cavalete_Gabinete"),
@@ -134,7 +139,7 @@ TH2_PMI_DEG = 345.0
 O5_Z_PMI = O4_Z - 2.0 * L4                         # 1.22357695155 m
 Z_TIP_PMI = Z_WORK_DATUM + 0.0575                  # 1.0375 m
 H_O5_TO_TIP = O5_Z_PMI - Z_TIP_PMI                 # 0.18607695155 m
-Z_BARU_TOP = 1.04225                               # Corte efetivo 3D = 4.75 mm
+Z_BARU_TOP = 1.04330                               # Corte efetivo 3D = 5.80 mm (baru deitado +6 mm)
 Z_BARU_CUT_10MM = Z_TIP_PMI + 0.010                # 1.0475 m (corte teórico de 10 mm)
 F_QUEBRA_MAX = 5000.0                              # N
 
@@ -461,9 +466,9 @@ def run_flywheel_ode_and_comparison(inertia_data: dict) -> dict:
     F_lin_10 = F_QUEBRA_MAX * s10
     F_bio_10 = F_QUEBRA_MAX * (s10 ** 0.4)
 
-    # Corte 4.75 mm (Baru_Simulado_30x50x40 do CAD)
+    # Corte 5.80 mm (Baru_Simulado_30x50x40 deitado +6 mm do CAD)
     mask_475 = (th_deg >= TH2_PMS_DEG) & (th_deg <= TH2_PMI_DEG) & (z_tip <= Z_BARU_TOP)
-    s475 = np.where(mask_475, np.clip((Z_BARU_TOP - z_tip) / 0.00475, 0.0, 1.0), 0.0)
+    s475 = np.where(mask_475, np.clip((Z_BARU_TOP - z_tip) / 0.00580, 0.0, 1.0), 0.0)
     F_bio_475 = F_QUEBRA_MAX * (s475 ** 0.4)
 
     # Torque resistente com rendimento da guia + juntas (modelo detalhado) e eta_mec = 0.90 (ref. anterior)
@@ -663,7 +668,8 @@ def run_main_mechanism_dalembert_360(inertia_data: dict, ode_res: dict | None = 
 
     keys = ("th3", "th4", "th5", "w3", "w4", "w5", "al3", "al4", "al5",
             "zO5", "z_tip", "vO5_z", "aO5_z", "mu_deg", "Ek", "dEk_dt",
-            "T12_in", "T12_vw", "T12_grav", "T12_cut_bio10", "T12_cut_bio475", "T12_total_bio10")
+            "T12_in", "T12_vw", "T12_grav", "T12_cut_bio10", "T12_cut_bio475", "T12_total_bio10",
+            "F_shake_x", "F_shake_z", "F_shake_mag")
     out = {k: np.zeros(N) for k in keys}
     for i in (2, 3, 4, 5, 6):
         out[f"aG{i}_mag"] = np.zeros(N)
@@ -788,7 +794,7 @@ def run_main_mechanism_dalembert_360(inertia_data: dict, ode_res: dict | None = 
         else:
             F_cut_10 = 0.0
         if TH2_PMS_DEG <= th2_deg[k] <= TH2_PMI_DEG and z_tip < Z_BARU_TOP:
-            s475 = min(1.0, max(0.0, (Z_BARU_TOP - z_tip) / 0.00475))
+            s475 = min(1.0, max(0.0, (Z_BARU_TOP - z_tip) / 0.00580))
             F_cut_475 = F_QUEBRA_MAX * (s475 ** 0.4)
         else:
             F_cut_475 = 0.0
@@ -805,6 +811,13 @@ def run_main_mechanism_dalembert_360(inertia_data: dict, ode_res: dict | None = 
         out["T12_cut_bio10"][k] = x_cut10[14]
         out["T12_cut_bio475"][k] = x_cut475[14]
         out["T12_total_bio10"][k] = x_tot[14]
+
+        # Força sacudidora total transmitida ao estator/chassi (Norton Eq. 14.1: F_shake = -sum m_i a_Gi)
+        fsx = -(x_in[0] + x_in[6] + x_in[12])
+        fsz = -(x_in[1] + x_in[7])
+        out["F_shake_x"][k] = fsx
+        out["F_shake_z"][k] = fsz
+        out["F_shake_mag"][k] = math.hypot(fsx, fsz)
 
         def store(vec, sfx):
             out[f"R_O2_{sfx}"][k] = math.hypot(vec[0], vec[1])
@@ -1184,7 +1197,7 @@ def generate_plots(fly_res, sim_const, sim_ode, sim_ext):
     ax.axvspan(106.0, 150.0, color="#fff2ae", alpha=0.7, label="Retorno [106°..150°]")
     ax.axvspan(258.0, 345.0, color="#fde8e2", alpha=0.7, label="Corte [258°..345°]")
     l1, = ax.plot(te, oe["z_tip_mm"], lw=2.3, color="#2166ac", label="Altura Ponta Navalha Z_tip (mm)")
-    ax.axhline(1042.25, color="#b2182b", ls=":", lw=1.4, label="Topo Baru 30x50x40 (1042,25 mm)")
+    ax.axhline(Z_BARU_TOP * 1e3, color="#b2182b", ls=":", lw=1.4, label=f"Topo Baru 50x40x30 ({Z_BARU_TOP*1e3:.2f} mm)")
     ax_r = ax.twinx()
     l2, = ax_r.plot(te, oe["psi_deg"], lw=2.3, color="#d95f02", ls="-.", label="Ângulo Pá Ejetora ψ (°)")
     ax.set_title("1. Sincronismo: Pá Ejetora Só Sobe com Navalha Alta!", fontweight="bold")
@@ -1226,12 +1239,149 @@ def generate_plots(fly_res, sim_const, sim_ode, sim_ext):
     save_fig(fig3, "motorizada_extrator_came_dinamica.png")
 
 
+def compute_rotating_balancing_comparison(inertia_data: dict, fly_res: dict, sim_const_after: dict, sim_ode_after: dict) -> dict:
+    import copy
+    import numpy as np
+
+    parts = inertia_data["parts"]
+    g2 = inertia_data["groups"]["Corpo2_O2"]
+    g3 = inertia_data["groups"]["Corpo3_L3"]
+    L3_mm = L3 * 1e3
+    L2_mm = L2 * 1e3
+    m3_g = g3["mass_kg"] * 1e3
+    xg3_mm = g3["cg_local_mm"][0]
+    m3A_g = m3_g * (1.0 - xg3_mm / L3_mm)
+    ux_3A = m3A_g * L2_mm
+
+    w2_ode = sim_ode_after["w2"]
+    al2_ode = sim_ode_after["al2"]
+    accel_factor_ode_max = float(np.max(np.sqrt(w2_ode ** 4 + al2_ode ** 2)))
+    al2_ode_max = float(np.max(np.abs(al2_ode)))
+
+    part_breakdown_after = {}
+    for nm in g2["parts"]:
+        p = parts[nm]
+        mg = p["mass_kg"] * 1e3
+        mk = p["mass_kg"]
+        cgx, cgy, cgz = p["cg_local_mm"]
+        e_mm = math.hypot(cgx, cgz)
+        ux = mg * cgx
+        uz = mg * cgz
+        umag = math.hypot(ux, uz)
+        iyy_cg = p["Iyy_cg_kg_m2"]
+        iyy_o2 = p["Iyy_orig_kg_m2"]
+        part_breakdown_after[nm] = {
+            "mass_g": mg,
+            "cg_local_mm": [cgx, cgy, cgz],
+            "eccentricity_O2_mm": e_mm,
+            "Iyy_cg_kg_m2": iyy_cg,
+            "Iyy_O2_kg_m2": iyy_o2,
+            "Ux_g_mm": ux,
+            "Uz_g_mm": uz,
+            "U_mag_g_mm": umag,
+            "F_cent_x_loc_20rpm_mN": ux * 1e-3 * (W2_NOMINAL ** 2),
+            "F_cent_z_loc_20rpm_mN": uz * 1e-3 * (W2_NOMINAL ** 2),
+            "F_cent_mag_20rpm_mN": umag * 1e-3 * (W2_NOMINAL ** 2),
+            "max_Fin_ode_mN": mk * (e_mm * 1e-3) * accel_factor_ode_max * 1e3,
+            "max_Tin_cg_ode_mNm": iyy_cg * al2_ode_max * 1e3,
+            "max_Tin_O2_ode_mNm": iyy_o2 * al2_ode_max * 1e3,
+        }
+
+    # Peças individuais de Corpo2 antes da atualização (p/ comparação direta de cada componente)
+    part_breakdown_before = {
+        "Eixo_Principal_O2_20rpm": {"mass_g": 496.6136, "cg_local_mm": [0.0, 75.0694, 0.0], "Ux_g_mm": 0.0, "Uz_g_mm": 0.0, "F_cent_mag_20rpm_mN": 0.0},
+        "Elo2_Manivela_L2": {"mass_g": 70.9608, "cg_local_mm": [16.1170, -21.3250, 0.0], "Ux_g_mm": 1143.6781, "Uz_g_mm": 0.0, "F_cent_mag_20rpm_mN": 1143.6781 * 1e-3 * (W2_NOMINAL ** 2)},
+        "Came_Extrator_O2": {"mass_g": 704.4291, "cg_local_mm": [2.5304, 64.0000, 0.0784], "Ux_g_mm": 1782.4640, "Uz_g_mm": 55.2390, "F_cent_mag_20rpm_mN": math.hypot(1782.4640, 55.2390) * 1e-3 * (W2_NOMINAL ** 2)},
+        "Buchas_Catalogo_A": {"mass_g": 2.2373, "cg_local_mm": [28.9778, -21.3250, 0.0], "Ux_g_mm": 64.8311, "Uz_g_mm": 0.0, "F_cent_mag_20rpm_mN": 64.8311 * 1e-3 * (W2_NOMINAL ** 2)},
+        "Pino_Eixo_A": {"mass_g": 19.9107, "cg_local_mm": [28.9778, -25.8896, 0.0], "Ux_g_mm": 576.9677, "Uz_g_mm": 0.0, "F_cent_mag_20rpm_mN": 576.9677 * 1e-3 * (W2_NOMINAL ** 2)},
+        "Aneis_Retencao_ORing_A": {"mass_g": 0.2348, "cg_local_mm": [28.9778, -25.8500, 0.0], "Ux_g_mm": 6.8052, "Uz_g_mm": 0.0, "F_cent_mag_20rpm_mN": 6.8052 * 1e-3 * (W2_NOMINAL ** 2)},
+    }
+
+    ux_c2_after = g2["mass_kg"] * 1e3 * g2["cg_local_mm"][0]
+    uz_c2_after = g2["mass_kg"] * 1e3 * g2["cg_local_mm"][2]
+    ux_tot_after = ux_c2_after + ux_3A
+    uz_tot_after = uz_c2_after
+    umag_after = math.hypot(ux_tot_after, uz_tot_after)
+
+    # Baseline pré-balanceamento (Corpo2_O2 original sem alívio no came e sem contrapeso traseiro)
+    inertia_before = copy.deepcopy(inertia_data)
+    m2_bef = 1.2943863030437206
+    cg2_bef = [2.761730509122875, 62.02279617131206, 0.0426758092886313]
+    ig2_bef = 0.0010919192396974566
+    inertia_before["groups"]["Corpo2_O2"]["mass_kg"] = m2_bef
+    inertia_before["groups"]["Corpo2_O2"]["cg_local_mm"] = cg2_bef
+    inertia_before["groups"]["Corpo2_O2"]["Iyy_cg_kg_m2"] = ig2_bef
+    inertia_before["groups"]["Corpo2_O2"]["Iyy_orig_kg_m2"] = (
+        ig2_bef + m2_bef * ((cg2_bef[0] * 1e-3) ** 2 + (cg2_bef[2] * 1e-3) ** 2)
+    )
+    ux_c2_bef = m2_bef * 1e3 * cg2_bef[0]
+    uz_c2_bef = m2_bef * 1e3 * cg2_bef[2]
+    ux_tot_bef = ux_c2_bef + ux_3A
+    uz_tot_bef = uz_c2_bef
+    umag_bef = math.hypot(ux_tot_bef, uz_tot_bef)
+
+    sim_const_bef = run_main_mechanism_dalembert_360(inertia_before, ode_res=None, N=1441)
+    sim_ode_bef = run_main_mechanism_dalembert_360(inertia_before, ode_res=fly_res["ode_400rpm_bio"], N=1441)
+
+    def shake_stats(sim_d):
+        o = sim_d["out"]
+        return {
+            "max_Fx_N": float(np.max(np.abs(o["F_shake_x"]))),
+            "max_Fz_N": float(np.max(np.abs(o["F_shake_z"]))),
+            "max_F_mag_N": float(np.max(o["F_shake_mag"])),
+            "rms_F_mag_N": float(np.sqrt(np.mean(o["F_shake_mag"] ** 2))),
+            "max_R_O2_in_N": float(np.max(o["R_O2_in"])),
+            "max_Fin2_N": float(np.max(o["Fin2_mag"])),
+        }
+
+    return {
+        "norton_coupler_lumping": {
+            "m3_total_g": m3_g,
+            "x_G3_mm": xg3_mm,
+            "L3_mm": L3_mm,
+            "L2_mm": L2_mm,
+            "m3A_rotating_g": m3A_g,
+            "Ux_3A_g_mm": ux_3A,
+            "F_cent_3A_20rpm_mN": ux_3A * 1e-3 * (W2_NOMINAL ** 2),
+            "max_Fin_3A_ode_mN": (m3A_g * 1e-3) * L2 * accel_factor_ode_max * 1e3,
+        },
+        "before_balancing": {
+            "Corpo2_mass_g": m2_bef * 1e3,
+            "Corpo2_parts_unbalance": part_breakdown_before,
+            "Came_Extrator_Ux_g_mm": 1782.4640,
+            "Came_Extrator_Uz_g_mm": 55.2390,
+            "Corpo2_Ux_g_mm": ux_c2_bef,
+            "Corpo2_Uz_g_mm": uz_c2_bef,
+            "U_rot_total_x_g_mm": ux_tot_bef,
+            "U_rot_total_z_g_mm": uz_tot_bef,
+            "U_rot_total_mag_g_mm": umag_bef,
+            "F_centrifuga_rot_20rpm_N": umag_bef * 1e-6 * (W2_NOMINAL ** 2),
+            "shaking_const_20rpm": shake_stats(sim_const_bef),
+            "shaking_ode_ripple": shake_stats(sim_ode_bef),
+        },
+        "after_balancing": {
+            "Corpo2_mass_g": g2["mass_kg"] * 1e3,
+            "Corpo2_parts_unbalance": part_breakdown_after,
+            "Corpo2_Ux_g_mm": ux_c2_after,
+            "Corpo2_Uz_g_mm": uz_c2_after,
+            "U_rot_total_x_g_mm": ux_tot_after,
+            "U_rot_total_z_g_mm": uz_tot_after,
+            "U_rot_total_mag_g_mm": umag_after,
+            "F_centrifuga_rot_20rpm_N": umag_after * 1e-6 * (W2_NOMINAL ** 2),
+            "unbalance_reduction_pct": 100.0 * (1.0 - umag_after / umag_bef),
+            "shaking_const_20rpm": shake_stats(sim_const_after),
+            "shaking_ode_ripple": shake_stats(sim_ode_after),
+        },
+    }
+
+
 def build_summary_report(inertia_data, fly_res, sim_const, sim_ode, sim_ext) -> dict:
     import numpy as np
 
     oc = sim_const["out"]
     oo = sim_ode["out"]
     oe = sim_ext["out"]
+    bal_comp = compute_rotating_balancing_comparison(inertia_data, fly_res, sim_const, sim_ode)
 
     res = {
         "flywheel_comparison": {
@@ -1273,6 +1423,12 @@ def build_summary_report(inertia_data, fly_res, sim_const, sim_ode, sim_ext) -> 
             "max_T12_cut_bio475_Nm": float(np.max(np.abs(oc["T12_cut_bio475"]))),
             "max_R_in_N": {j: float(np.max(oc[f"R_{j}_in"])) for j in ("O2", "A", "B3", "B4", "B5", "O4", "O5", "N16")},
             "max_R_cut_bio_N": {j: float(np.max(oc[f"R_{j}_cut_bio"])) for j in ("O2", "A", "B3", "B4", "B5", "O4", "O5", "N16")},
+            "max_F_shake_N": {
+                "Fx": float(np.max(np.abs(oc["F_shake_x"]))),
+                "Fz": float(np.max(np.abs(oc["F_shake_z"]))),
+                "F_mag": float(np.max(oc["F_shake_mag"])),
+                "F_rms": float(np.sqrt(np.mean(oc["F_shake_mag"] ** 2))),
+            },
             "max_Ek_J": float(np.max(oc["Ek"])),
         },
         "dalembert_20rpm_ode_ripple": {
@@ -1282,7 +1438,14 @@ def build_summary_report(inertia_data, fly_res, sim_const, sim_ode, sim_ext) -> 
             "max_Tin2_Nm": float(np.max(np.abs(oo["Tin2"]))),
             "max_T12_in_Nm": float(np.max(np.abs(oo["T12_in"]))),
             "max_R_in_N": {j: float(np.max(oo[f"R_{j}_in"])) for j in ("O2", "A", "B3", "B4", "B5", "O4", "O5", "N16")},
+            "max_F_shake_N": {
+                "Fx": float(np.max(np.abs(oo["F_shake_x"]))),
+                "Fz": float(np.max(np.abs(oo["F_shake_z"]))),
+                "F_mag": float(np.max(oo["F_shake_mag"])),
+                "F_rms": float(np.sqrt(np.mean(oo["F_shake_mag"] ** 2))),
+            },
         },
+        "rotating_balancing_and_shaking_force": bal_comp,
         "cam_extractor_20rpm": {
             "vw_max_err_Nm": sim_ext["vw_max_err_Nm"],
             "s_max_mm": float(np.max(oe["cam_lift_mm"])),
@@ -1353,6 +1516,10 @@ def main():
     print(f"• Máx Fin (const, N): { {k: round(v, 4) for k, v in dc['max_Fin_N'].items()} } | T12_in_max = {dc['max_T12_in_Nm']:.5f} N.m")
     print(f"• Máx Fin (c/ ODE α2, N): { {k: round(v, 4) for k, v in do['max_Fin_N'].items()} } | T12_in_max = {do['max_T12_in_Nm']:.5f} N.m")
     print(f"• Came Extrator: s_max={ce['s_max_mm']:.2f} mm, alpha_p_max={ce['alpha_p_max_deg']:.2f}°, F_contato=[{ce['min_F_cam_contact_N']:.2f}, {ce['max_F_cam_contact_N']:.2f}] N (>0 OK!)")
+    rb = summary["rotating_balancing_and_shaking_force"]
+    bb, ba = rb["before_balancing"], rb["after_balancing"]
+    print(f"• Balanceamento Rotativo (Corpo2 + m_3A): ANTES |U|={bb['U_rot_total_mag_g_mm']:.4f} g.mm -> DEPOIS |U|={ba['U_rot_total_mag_g_mm']:.6f} g.mm ({ba['unbalance_reduction_pct']:.6f}% reducao!)")
+    print(f"• Forca Sacudidora F_shake (const): ANTES Fx={bb['shaking_const_20rpm']['max_Fx_N']:.4f} N, |F|={bb['shaking_const_20rpm']['max_F_mag_N']:.4f} N -> DEPOIS Fx={ba['shaking_const_20rpm']['max_Fx_N']:.4f} N, |F|={ba['shaking_const_20rpm']['max_F_mag_N']:.4f} N")
 
 
 if __name__ == "__main__":

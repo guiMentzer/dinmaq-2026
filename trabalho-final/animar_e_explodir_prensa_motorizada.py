@@ -23,14 +23,17 @@ except ImportError:
         from PySide import QtCore, QtGui as QtWidgets
 
 
-Z_BARU_TOP = 1042.2500
+Z_BARU_TOP = 1043.3000
 O_INT_X, O_INT_Z = 56.00, 1278.00
 O_MOT_X, O_MOT_Z = 56.00, 896.00
 
 EXPRESSION_DRIVEN_EXTRACTOR_AND_MAIN = {
     "Eixo_Principal_O2_20rpm",
     "Elo2_Manivela_L2",
+    "Parafuso_Fixacao_Manivela_M6",
     "Came_Extrator_O2",
+    "Contrapeso_Balanceamento_O2",
+    "Parafusos_Contrapeso_M6",
     "Buchas_Catalogo_A",
     "Pino_Eixo_A",
     "Aneis_Retencao_ORing_A",
@@ -60,6 +63,8 @@ EXPLODE_VECTORS = {
     # Subconjunto 08 - Cavalete 1,5 m, Carenagem NR-12, Moega, Coletor 12,3 L & Extrator
     "Sapatas_Ancoragem_Piso":           (0.0,    0.0,  -95.0),
     "Quadro_Tubular_Metalon_20x20":     (0.0,  220.0,    0.0),
+    "Cantoneiras_Maos_Francesas_Uniao": (0.0,  255.0,   20.0),
+    "Parafusos_Uniao_Gabinete_M8":      (0.0,  285.0,   35.0),
     "Carenagem_Chapa_Galvanizada":      (120.0, 320.0,  60.0),
     "Visor_Policarbonato_NR12":         (0.0, -300.0,  -15.0),
     "Parafusos_Fixacao_Gabinete_M6":    (0.0, -345.0,  -15.0),
@@ -122,13 +127,16 @@ EXPLODE_VECTORS = {
     "Elo3_Biela_L3":                    (0.0,  -68.0,    0.0),
     "Buchas_Catalogo_L3":               (0.0,  -84.0,    0.0),
 
-    # Subconjunto 02 - Eixo O2, Manivela L2 & Came 3-4-5
+    # Subconjunto 02 - Eixo O2, Manivela L2 Parafusada, Came Aliviado & Contrapeso O2
     "Eixo_Principal_O2_20rpm":          (0.0,  -95.0,    0.0),
-    "Elo2_Manivela_L2":                 (0.0, -108.0,    0.0),
-    "Came_Extrator_O2":                 (0.0,   70.0,    0.0),
-    "Buchas_Catalogo_A":                (0.0, -122.0,    0.0),
-    "Pino_Eixo_A":                      (0.0, -138.0,    0.0),
-    "Aneis_Retencao_ORing_A":           (0.0, -154.0,    0.0),
+    "Elo2_Manivela_L2":                 (0.0, -110.0,    0.0),
+    "Parafuso_Fixacao_Manivela_M6":     (0.0, -124.0,    0.0),
+    "Contrapeso_Balanceamento_O2":      (0.0,   52.0,    0.0),
+    "Came_Extrator_O2":                 (0.0,   72.0,    0.0),
+    "Parafusos_Contrapeso_M6":          (0.0,   92.0,    0.0),
+    "Buchas_Catalogo_A":                (0.0, -138.0,    0.0),
+    "Pino_Eixo_A":                      (0.0, -154.0,    0.0),
+    "Aneis_Retencao_ORing_A":           (0.0, -170.0,    0.0),
 }
 
 
@@ -228,7 +236,7 @@ class PainelAnimacaoExplodidaMotorizada(QtWidgets.QWidget):
         lay.addWidget(grp_anim)
 
         # ---- Seção 2: Vista Explodida ----
-        grp_exp = QtWidgets.QGroupBox("2. Vista Explodida Interativa (55 Sólidos: 0% → 100%)")
+        grp_exp = QtWidgets.QGroupBox("2. Vista Explodida Interativa (60 Peças: 0% → 100%)")
         le = QtWidgets.QVBoxLayout(grp_exp)
 
         self.lbl_exp = QtWidgets.QLabel("Fator de Explosão: 0%")

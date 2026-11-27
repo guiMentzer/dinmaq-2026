@@ -1,0 +1,9 @@
+trabalho-final/midias
+trabalho-final/Prensas_Baru_CAD_STEP_e_FreeCAD.zip
+trabalho-final/prensa_baru_manual_v1.step
+trabalho-final/prensa_baru_motorizada_v1.step
+trabalho-final/*.FCBak
+trabalho-final/assets/*.png
+__pycache__/
+*.pyc
+octave-workspace

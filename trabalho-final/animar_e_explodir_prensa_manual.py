@@ -23,7 +23,7 @@ except ImportError:
         from PySide import QtCore, QtGui as QtWidgets
 
 
-Z_BARU_TOP = 1042.2500
+Z_BARU_TOP = 1043.3000
 
 # Vetores de explosão (dx, dy, dz) em mm a 100%.
 # Regra: peças móveis controladas no plano XZ pelo ExpressionEngine (O2, L3, L4, L5, O5,
@@ -33,6 +33,8 @@ EXPLODE_VECTORS = {
     # Subconjunto 07 - Cavalete 1,5 m, Carenagem, Reservatório 12,3 L & Pedal +X
     "Sapatas_Ancoragem_Piso":           (0.0,    0.0,  -85.0),
     "Quadro_Tubular_Metalon_20x20":     (0.0,  160.0,    0.0),
+    "Cantoneiras_Maos_Francesas_Uniao": (0.0,  195.0,   20.0),
+    "Parafusos_Uniao_Gabinete_M8":      (0.0,  225.0,   35.0),
     "Carenagem_Chapa_Galvanizada":      (0.0,  260.0,   45.0),
     "Visor_Policarbonato_NR12":         (0.0, -280.0,  -15.0),
     "Parafusos_Fixacao_Gabinete_M6":    (0.0, -320.0,  -15.0),
@@ -54,7 +56,7 @@ EXPLODE_VECTORS = {
     "Pino_Eixo_O4":                     (0.0,  -55.0,    0.0),
     "Aneis_Retencao_ORing_O4":          (0.0,  -72.0,    0.0),
     "Portico_Estrutural_Frontal":       (0.0, -145.0,    0.0),
-    "Batentes_Pinos_Soldados_PMS_PMI":  (0.0, -165.0,    0.0),
+    "Parafusos_Limitadores_Curso_M12":  (0.0, -168.0,    0.0),
     "Guia_Pistao_Chapa_U":              (0.0,  -22.0,    0.0),
     "Parafusos_Guia_Pistao_M8":         (0.0,  -48.0,    0.0),
     "Tiras_Desgaste_UHMW_5mm":          (0.0,   18.0,    0.0),

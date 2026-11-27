@@ -49,7 +49,7 @@ OBJ_CATALOG = {
     "Portico_Estrutural_Traseiro": ("aco", "Sub01_Estator"),
     "Portico_Estrutural_Frontal": ("aco", "Sub01_Estator"),
     "Espacadores_Transversais_Portico": ("aco", "Sub01_Estator"),
-    "Batentes_Pinos_Soldados_PMS_PMI": ("aco", "Sub01_Estator"),
+    "Parafusos_Limitadores_Curso_M12": ("aco", "Sub01_Estator"),
     "Suporte_Baru_Cantoneira": ("aco", "Sub01_Estator"),
     "Guia_Pistao_Chapa_U": ("aco", "Sub01_Estator"),
     "Parafusos_Guia_Pistao_M8": ("aco", "Sub01_Estator"),
@@ -83,6 +83,8 @@ OBJ_CATALOG = {
     "Aneis_Retencao_ORing_O5": ("borracha", "Corpo6_O5"),
     # Subconjunto 07 - Cavalete 1,5m, Moega, Reservatório e Pedal
     "Quadro_Tubular_Metalon_20x20": ("aco", "Sub07_Cavalete_Gabinete"),
+    "Cantoneiras_Maos_Francesas_Uniao": ("aco", "Sub07_Cavalete_Gabinete"),
+    "Parafusos_Uniao_Gabinete_M8": ("aco", "Sub07_Cavalete_Gabinete"),
     "Sapatas_Ancoragem_Piso": ("aco", "Sub07_Cavalete_Gabinete"),
     "Carenagem_Chapa_Galvanizada": ("aco", "Sub07_Cavalete_Gabinete"),
     "Visor_Policarbonato_NR12": ("pc", "Sub07_Cavalete_Gabinete"),
@@ -120,8 +122,8 @@ R_GRIP_TIP = 0.600  # Ponta externa da alavanca (m)
 O5_Z_PMI = O4_Z - 2.0 * L4                         # 1.223576952 m
 Z_TIP_PMI = Z_WORK_DATUM + 0.0575                  # 1.0375 m
 H_O5_TO_TIP = O5_Z_PMI - Z_TIP_PMI                 # 0.186076952 m
-Z_BARU_TOP = 1.04225                               # Corte efetivo = 4.75 mm
-Z_CANTONEIRA_CUT = 4.75e-3                         # m
+Z_BARU_TOP = 1.04330                               # Corte efetivo = 5.80 mm (baru deitado +6 mm)
+Z_CANTONEIRA_CUT = 5.80e-3                         # m
 F_QUEBRA_MAX = 5000.0                              # N
 
 # Parâmetros cinemáticos do sistema 4-barras de extração por pedal (SI: metros)
